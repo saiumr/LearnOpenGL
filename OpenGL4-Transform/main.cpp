@@ -161,14 +161,6 @@ void renderLoop(Shader& shader) {
     // set position
     shader.setFloat("movePosition", 0.0f);
 
-    // First, scale by a factor of 0.5, then rotate by 90 degrees.
-    // watch out matrix AB != BA
-    glm::mat4 trans;
-                               // degree -> radians  // rotating around z-axis
-    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
-    shader.setMat4("transform", trans);
-
     float blend = 0.33f;
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -190,6 +182,13 @@ void renderLoop(Shader& shader) {
             }
         }
         shader.setFloat("blend", blend);
+
+        // first translate then ratate(in while) by the time.
+        // Remember that matrix multiplication is applied in reverse.
+        glm::mat4 trans;
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+        shader.setMat4("transform", trans);
 
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
