@@ -79,7 +79,7 @@ void renderLoop(Shader& shader) {
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     // default
-    /*
+
     float vertices[] = {
         // position         // color          // texture coord (S,T,[R])
         -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // left bottom 
@@ -87,10 +87,10 @@ void renderLoop(Shader& shader) {
          0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // right top
         -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // left top
     };
-    */
+
 
     // practice 2: 4 face
-    
+    /*
     float vertices[] = {
         // position         // color          // texture coord (S,T,[R])
         -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // left bottom 
@@ -98,6 +98,7 @@ void renderLoop(Shader& shader) {
          0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 2.0f, // right top
         -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f  // left top
     };
+    */
     
 
     // practice 3: a part of picture
@@ -160,7 +161,7 @@ void renderLoop(Shader& shader) {
     // set position
     shader.setFloat("movePosition", 0.0f);
 
-    float blend = 0.0f;
+    float blend = 0.33f;
     // Render loop
     while (!glfwWindowShouldClose(window)) {
 
@@ -173,15 +174,14 @@ void renderLoop(Shader& shader) {
             if (blend >= 1.0f) {
                 blend = 1.0f;
             }
-            shader.setFloat("blend", blend);
         }
         else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
             blend = blend - 0.001f;
             if (blend <= 0.0f) {
                 blend = 0.0f;
             }
-            shader.setFloat("blend", blend);
         }
+        shader.setFloat("blend", blend);
 
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
