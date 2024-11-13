@@ -161,6 +161,14 @@ void renderLoop(Shader& shader) {
     // set position
     shader.setFloat("movePosition", 0.0f);
 
+    // First, scale by a factor of 0.5, then rotate by 90 degrees.
+    // watch out matrix AB != BA
+    glm::mat4 trans;
+                               // degree -> radians  // rotating around z-axis
+    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+    shader.setMat4("transform", trans);
+
     float blend = 0.33f;
     // Render loop
     while (!glfwWindowShouldClose(window)) {

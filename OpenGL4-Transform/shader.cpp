@@ -56,6 +56,10 @@ void Shader::setFloat(const std::string& name, float value) const {
 	glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 }
 
+void Shader::setMat4(const std::string& name, glm::mat4& trans) const {
+	glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(trans));
+}
+
 void Shader::compileShader_(const char* shaderCode, GLenum shaderType) {
 	int          success;
 	char         infoLog[512];
