@@ -167,6 +167,9 @@ void renderLoop(Shader& shader) {
 
         // Process input
         processInput(window);
+        // render
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         // practice 4: set blend value (no fps control so that change so fast)
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS ) {
@@ -189,17 +192,19 @@ void renderLoop(Shader& shader) {
         trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
         trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
         shader.setMat4("transform", trans);
-
-        // render
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
         
         // draw triangle
         glBindVertexArray(VAO);  // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         //glDrawArrays(GL_TRIANGLES, 0, 3);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         // glBindVertexArray(0); // no need to unbind it every time 
+
+        // better transform order: scale, rotate, translate
+        trans = glm::mat4{ 1.0f };
+        trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
+        trans = glm::scale(trans, glm::vec3(std::sin((float)glfwGetTime()), std::sin((float)glfwGetTime()), std::sin((float)glfwGetTime())));
+        shader.setMat4("transform", trans);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // Swap buffer and poll IO events
         glfwSwapBuffers(window);
