@@ -10,8 +10,16 @@
 
 [GLFW下载页](http://www.glfw.org/download.html)  
 [glad在线服务](http://glad.dav1d.de/)  
+[glm官网(0.9.8)](https://glm.g-truc.net/0.9.8/index.html)  
 
-详细说明可以参考：[LearnOpenGL CN - 创建窗口](https://learnopengl-cn.github.io/01%20Getting%20started/02%20Creating%20a%20window/)  
+数学库（glm）使用的是和教程一致的0.9.8版本，从0.9.9版本开始，glm默认创建的矩阵就是零矩阵了，而不是单位矩阵，如果想创建单位矩阵需要这样初始化：  
+
+```c++
+// glm version >= 0.9.9
+glm::mat4 mat = glm::mat4(1.0f);
+```
+
+GLFW和glad的详细说明可以参考：[LearnOpenGL CN - 创建窗口](https://learnopengl-cn.github.io/01%20Getting%20started/02%20Creating%20a%20window/)  
 
 正常来说，`glad.c`和`stb_image.h`应该包含在项目源码中，我只是图个方便，将一些东西分离出来了（比如将glad编译为静态库）。  
 
