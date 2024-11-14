@@ -72,6 +72,9 @@ int initWindow() {
     // Set viewport
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    // enable depth test
+    glEnable(GL_DEPTH_TEST);
+
     return 0;
 }
 
@@ -207,7 +210,7 @@ void renderLoop(Shader& shader) {
         processInput(window);
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // practice 4: set blend value (no fps control so that change so fast)
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS ) {
