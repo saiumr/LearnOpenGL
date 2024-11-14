@@ -30,6 +30,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL4-Transform", "OpenGL
 		{785559F6-E673-4716-97CD-1F7C56FC63E6} = {785559F6-E673-4716-97CD-1F7C56FC63E6}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL5-CoordinateSys", "OpenGL5-CoordinateSys\OpenGL5-CoordinateSys.vcxproj", "{AA07F4CD-445F-4A9F-A9E0-CA28CCDA7B05}"
+	ProjectSection(ProjectDependencies) = postProject
+		{785559F6-E673-4716-97CD-1F7C56FC63E6} = {785559F6-E673-4716-97CD-1F7C56FC63E6}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -86,6 +91,14 @@ Global
 		{C47C33BA-5676-4DD3-BDC0-855723F4D05E}.Release|x64.Build.0 = Release|x64
 		{C47C33BA-5676-4DD3-BDC0-855723F4D05E}.Release|x86.ActiveCfg = Release|Win32
 		{C47C33BA-5676-4DD3-BDC0-855723F4D05E}.Release|x86.Build.0 = Release|Win32
+		{AA07F4CD-445F-4A9F-A9E0-CA28CCDA7B05}.Debug|x64.ActiveCfg = Debug|x64
+		{AA07F4CD-445F-4A9F-A9E0-CA28CCDA7B05}.Debug|x64.Build.0 = Debug|x64
+		{AA07F4CD-445F-4A9F-A9E0-CA28CCDA7B05}.Debug|x86.ActiveCfg = Debug|Win32
+		{AA07F4CD-445F-4A9F-A9E0-CA28CCDA7B05}.Debug|x86.Build.0 = Debug|Win32
+		{AA07F4CD-445F-4A9F-A9E0-CA28CCDA7B05}.Release|x64.ActiveCfg = Release|x64
+		{AA07F4CD-445F-4A9F-A9E0-CA28CCDA7B05}.Release|x64.Build.0 = Release|x64
+		{AA07F4CD-445F-4A9F-A9E0-CA28CCDA7B05}.Release|x86.ActiveCfg = Release|Win32
+		{AA07F4CD-445F-4A9F-A9E0-CA28CCDA7B05}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -55,9 +55,9 @@ int initWindow() {
 #endif
 
     // Create GLFW window
-    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL4: Transform", NULL, NULL);
+    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL5: Coordinate System", NULL, NULL);
     if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << std::endl;
+        std::cout << "Failed to create GLFW window" << std::endl; 
         glfwTerminate();
         return -1;
     }
@@ -79,7 +79,6 @@ void renderLoop(Shader& shader) {
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     // default
-
     float vertices[] = {
         // position         // color          // texture coord (S,T,[R])
         -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // left bottom 
@@ -87,30 +86,6 @@ void renderLoop(Shader& shader) {
          0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // right top
         -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // left top
     };
-
-
-    // practice 2: 4 face
-    /*
-    float vertices[] = {
-        // position         // color          // texture coord (S,T,[R])
-        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // left bottom 
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f, // right bottom
-         0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 2.0f, // right top
-        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f  // left top
-    };
-    */
-    
-
-    // practice 3: a part of picture
-    /*
-    float vertices[] = {
-        // positions          // colors           // texture coords (note that we changed them to 'zoom in' on our texture image)
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   0.55f, 0.55f, // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   0.55f, 0.45f, // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.45f, 0.45f, // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.45f, 0.55f  // top left 
-    };
-    */
 
     unsigned int indeices[] = {
         0, 1, 2,
@@ -185,25 +160,9 @@ void renderLoop(Shader& shader) {
             }
         }
         shader.setFloat("blend", blend);
-
-        // first translate then ratate(in while) by the time.
-        // Remember that matrix multiplication is applied in reverse.
-        glm::mat4 trans;
-        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-        shader.setMat4("transform", trans);
         
         // draw triangle
         glBindVertexArray(VAO);  // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        // glBindVertexArray(0); // no need to unbind it every time 
-
-        // better transform order: scale, rotate, translate
-        trans = glm::mat4{ 1.0f };
-        trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
-        trans = glm::scale(trans, glm::vec3(std::sin((float)glfwGetTime()), std::sin((float)glfwGetTime()), std::sin((float)glfwGetTime())));
-        shader.setMat4("transform", trans);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // Swap buffer and poll IO events
