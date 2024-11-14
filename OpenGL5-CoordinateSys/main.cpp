@@ -81,15 +81,69 @@ void renderLoop(Shader& shader) {
     // default
     float vertices[] = {
         // position         // color          // texture coord (S,T,[R])
-        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // left bottom 
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // right bottom
-         0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // right top
-        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // left top
+        // bottom face (image your eyes in box and staring straight at a face)
+        -0.5f,-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom-left
+         0.5f,-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
+         0.5f,-0.5f,-0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // top-right
+        -0.5f,-0.5f,-0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
+
+        // back face
+        -0.5f,-0.5f,-0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom-left
+         0.5f,-0.5f,-0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
+         0.5f, 0.5f,-0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // top-right
+        -0.5f, 0.5f,-0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
+
+        // left face
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom-left
+        -0.5f,-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
+        -0.5f,-0.5f,-0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // top-right
+        -0.5f, 0.5f,-0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
+
+        // right face
+         0.5f,-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom-left
+         0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
+         0.5f, 0.5f,-0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // top-right
+         0.5f,-0.5f,-0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
+
+         // top face
+         0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom-left
+        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
+        -0.5f, 0.5f,-0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // top-right
+         0.5f, 0.5f,-0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
+
+        // front face
+        -0.5f,-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom-left
+         0.5f,-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
+         0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // top-right
+        -0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
+
     };
 
+    // a cube
     unsigned int indeices[] = {
+        // bottom face
         0, 1, 2,
         2, 3, 0,
+
+        // bace face
+        4, 5, 6,
+        6, 7, 4,
+        
+        // left face
+        8, 9, 10,
+        10, 11, 8,
+
+        // right face
+        12, 13, 14,
+        14, 15, 12,
+        
+        // top face
+        16, 17, 18,
+        18, 19, 16,
+        
+        // front face
+        20, 21, 22,
+        22, 23, 20,
     };
 
     unsigned int VBO, VAO, EBO;
@@ -118,7 +172,7 @@ void renderLoop(Shader& shader) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, createTexture("container.jpg"));
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, createTexture("awesomeface.png"));
+    glBindTexture(GL_TEXTURE_2D, createTexture("yin_tiger.png"));
 
     // After setting data, unbind objs (use function the same as bind)
     glBindBuffer(GL_ARRAY_BUFFER, 0);           // VBO 0
@@ -136,7 +190,16 @@ void renderLoop(Shader& shader) {
     // set position
     shader.setFloat("movePosition", 0.0f);
 
-    float blend = 0.33f;
+    // Now - OpenGL5: Coordinate System
+    glm::mat4 model, view, projection;
+    //model      = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); // Translate the entire scene backward by 3 units.
+    projection = glm::perspective(glm::radians(45.0f), static_cast<float>(SCR_WIDTH) / SCR_HEIGHT, 0.1f, 100.0f);
+    shader.setMat4("model", model);  // glm 0.9.8, model is identity matrix
+    shader.setMat4("view", view);
+    shader.setMat4("projection", projection);
+
+    float blend = 0.50f;
     // Render loop
     while (!glfwWindowShouldClose(window)) {
 
@@ -160,10 +223,15 @@ void renderLoop(Shader& shader) {
             }
         }
         shader.setFloat("blend", blend);
+
+        // dynamic model trans
+        model = glm::mat4{ 1.0f };
+        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(45.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+        shader.setMat4("model", model);
         
         // draw triangle
         glBindVertexArray(VAO);  // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6 * 6, GL_UNSIGNED_INT, 0);
 
         // Swap buffer and poll IO events
         glfwSwapBuffers(window);
