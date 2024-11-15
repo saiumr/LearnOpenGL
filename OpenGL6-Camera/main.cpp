@@ -6,6 +6,8 @@
 #include "texture.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
 // Init
@@ -19,6 +21,19 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
 GLFWwindow* window = nullptr;
 
+// OpenGL6: Camera
+glm::vec3 cameraPos   = glm::vec3{ 0.0f, 0.0f, 3.0f };
+glm::vec3 cameraFront = glm::vec3{ 0.0f, 0.0f, -1.0f }; // the vector of camera position substract target position
+glm::vec3 cameraUp    = glm::vec3{ 0.0f, 1.0f, 0.0f };
+float     deltaTime   = 0.0f;    // unified moving speed
+float     lastTime    = 0.0f;
+
+bool firstMove = true;
+float yaw   = -90.0f;
+float pitch = 0.0f;
+float lastX = static_cast<float>(SCR_WIDTH) / 2.0f;
+float lastY = static_cast<float>(SCR_HEIGHT) / 2.0f;
+float fov   = 45.0f;
 
 int main()
 {
@@ -35,6 +50,54 @@ int main()
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+
+
+
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    // Avoid first frame jump (spanned too great a distance)
+    if (firstMove)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMove = false;
+    }
+
+    float offsetX = lastX - xpos;
+    float offsetY = ypos - lastY;
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.05f;
+    offsetX *= sensitivity;
+    offsetY *= sensitivity;
+
+    yaw += offsetX;
+    pitch += offsetY;
+
+
+    // limit pitch
+    if (pitch > 89.0f) {
+        pitch = 89.0f;
+    }
+    else if (pitch < -89.0f) {
+        pitch = -89.0f;
+    }
+
+    // todo: why?
+    glm::vec3 front{ 1.0f };
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = front;
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+
 }
 
 void processInput(GLFWwindow* window)
@@ -71,6 +134,9 @@ int initWindow() {
 
     // Set viewport
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    // Set mouse callback (mouse motion changes cursor position)
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     // enable depth test
     glEnable(GL_DEPTH_TEST);
@@ -216,15 +282,8 @@ void renderLoop(Shader& shader) {
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
 
-    // OpenGL6: Camera
-    glm::vec3 cameraPos   = glm::vec3{ 0.0f, 0.0f, 3.0f };
-    glm::vec3 cameraFront = glm::vec3{ 0.0f, 0.0f, -1.0f }; // the vector of camera position substract target position
-    glm::vec3 cameraUp    = glm::vec3{ 0.0f, 1.0f, 0.0f };
-    float deltaTime = 0.0f;    // unified moving speed
-    float lastTime = 0.0f;
-
-    float blend = 0.50f;
     // Render loop
+    float blend = 0.50f;
     while (!glfwWindowShouldClose(window)) {
         float currentTime = static_cast<float>(glfwGetTime());
         deltaTime = currentTime - lastTime;
@@ -252,6 +311,7 @@ void renderLoop(Shader& shader) {
         shader.setFloat("blend", blend);
         
         // OpenGL6: Camera
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  // hidden cursor (use 'Q' escape)
         view = glm::mat4{ 1.0f };
         float cameraSpeed = static_cast<float>(1.0f * deltaTime);
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
