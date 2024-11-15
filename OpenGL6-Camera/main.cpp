@@ -53,9 +53,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-
-
-
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -68,7 +65,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     }
 
     float offsetX = lastX - xpos;
-    float offsetY = ypos - lastY;
+    float offsetY = ypos - lastY;  // todo: why?
     lastX = xpos;
     lastY = ypos;
 
@@ -97,7 +94,16 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-
+    // At OpenGL5, we all know fov could scale model
+    if (fov >= 1.0f and fov <= 60.0f) {
+        fov -= yoffset;
+    }
+    if (fov <= 1.0f) {
+        fov = 1.0f;
+    }
+    if (fov >= 60.0f) {
+        fov = 60.0f;
+    }
 }
 
 void processInput(GLFWwindow* window)
@@ -138,8 +144,14 @@ int initWindow() {
     // Set mouse callback (mouse motion changes cursor position)
     glfwSetCursorPosCallback(window, mouse_callback);
 
+    // Scale model by mouse scoll
+    glfwSetScrollCallback(window, scroll_callback);
+
     // enable depth test
     glEnable(GL_DEPTH_TEST);
+
+    // hidden cursor (use 'Q' escape)
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     return 0;
 }
@@ -311,7 +323,6 @@ void renderLoop(Shader& shader) {
         shader.setFloat("blend", blend);
         
         // OpenGL6: Camera
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  // hidden cursor (use 'Q' escape)
         view = glm::mat4{ 1.0f };
         float cameraSpeed = static_cast<float>(1.0f * deltaTime);
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -328,6 +339,10 @@ void renderLoop(Shader& shader) {
         }
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         shader.setMat4("view", view);
+
+        projection = glm::mat4{ 1.0f };
+        projection = glm::perspective(glm::radians(fov), static_cast<float>(SCR_WIDTH) / SCR_HEIGHT, 0.1f, 100.0f);
+        shader.setMat4("projection", projection);
 
         // draw triangle
         glBindVertexArray(VAO);  // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
