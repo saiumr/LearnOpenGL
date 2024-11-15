@@ -25,4 +25,4 @@ GLFW和glad的详细说明可以参考：[LearnOpenGL CN - 创建窗口](https:/
 
 ## How to add a new project  
 
-在解决方案`LearnOpenGL.sln`上新增一个项目，配置`头文件路径`和`库文件路径`，添加需要链接的库，同时要设置好项目依赖，这些都可以参考别的项目配置怎么写的。注意配置中用到的一个宏，`$(solutionDir)`，它代表当前的解决方案路径，即：`xxx\xxx\OpenGL_lib`。  
+在解决方案`LearnOpenGL.sln`上新增一个项目，配置`头文件路径`和`库文件路径`，添加需要链接的库，同时要设置好项目依赖，这些都可以参考别的项目配置怎么写的。注意配置中用到的一个宏，`$(solutionDir)`，它代表当前的解决方案路径，即：`xxx\xxx\LearnOpenGL\`。  
