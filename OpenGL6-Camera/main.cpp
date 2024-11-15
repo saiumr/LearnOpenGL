@@ -207,7 +207,7 @@ void renderLoop(Shader& shader) {
     // set position
     shader.setFloat("movePosition", 0.0f);
 
-    // Now - OpenGL5: Coordinate System
+    // OpenGL5: Coordinate System
     glm::mat4 model, view, projection;
     //model      = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); // Translate the entire scene backward by 3 units.
@@ -216,9 +216,19 @@ void renderLoop(Shader& shader) {
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
 
+    // OpenGL6: Camera
+    glm::vec3 cameraPos   = glm::vec3{ 0.0f, 0.0f, 3.0f };
+    glm::vec3 cameraFront = glm::vec3{ 0.0f, 0.0f, -1.0f }; // the vector of camera position substract target position
+    glm::vec3 cameraUp    = glm::vec3{ 0.0f, 1.0f, 0.0f };
+    float deltaTime = 0.0f;    // unified moving speed
+    float lastTime = 0.0f;
+
     float blend = 0.50f;
     // Render loop
     while (!glfwWindowShouldClose(window)) {
+        float currentTime = static_cast<float>(glfwGetTime());
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
 
         // Process input
         processInput(window);
@@ -241,6 +251,24 @@ void renderLoop(Shader& shader) {
         }
         shader.setFloat("blend", blend);
         
+        // OpenGL6: Camera
+        view = glm::mat4{ 1.0f };
+        float cameraSpeed = static_cast<float>(1.0f * deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            cameraPos += cameraSpeed * cameraFront;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            cameraPos -= cameraSpeed * cameraFront;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        }
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        shader.setMat4("view", view);
+
         // draw triangle
         glBindVertexArray(VAO);  // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 
