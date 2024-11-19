@@ -4,6 +4,7 @@
 #include <vector>
 #include "shader.h"
 #include "texture.h"
+#include "camera.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
@@ -22,18 +23,12 @@ const unsigned int SCR_HEIGHT = 800;
 GLFWwindow* window = nullptr;
 
 // OpenGL6: Camera
-glm::vec3 cameraPos   = glm::vec3{ 0.0f, 0.0f, 3.0f };
-glm::vec3 cameraFront = glm::vec3{ 0.0f, 0.0f, -1.0f }; // the vector of camera position substract target position
-glm::vec3 cameraUp    = glm::vec3{ 0.0f, 1.0f, 0.0f };
-float     deltaTime   = 0.0f;    // unified moving speed
-float     lastTime    = 0.0f;
-
+Camera camera{ glm::vec3 {0.0f, 0.0f, 3.0f} };
 bool firstMove = true;
-float yaw   = -90.0f;
-float pitch = 0.0f;
 float lastX = static_cast<float>(SCR_WIDTH) / 2.0f;
 float lastY = static_cast<float>(SCR_HEIGHT) / 2.0f;
-float fov   = 45.0f;
+float deltaTime;
+float lastTime;
 
 int main()
 {
@@ -73,43 +68,30 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     offsetX *= sensitivity;
     offsetY *= sensitivity;
 
-    yaw += offsetX;
-    pitch += offsetY;
-
-
-    // limit pitch
-    if (pitch > 89.0f) {
-        pitch = 89.0f;
-    }
-    else if (pitch < -89.0f) {
-        pitch = -89.0f;
-    }
-
-    // camera local coordinate rotate
-    glm::vec3 front{ 1.0f };
-    front.x = cos(glm::radians(yaw));
-    front.y = sin(glm::radians(pitch));
-    front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-    cameraFront = front;
+    camera.ProcessMouseMovement(offsetX, offsetY);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    // At OpenGL5, we all know fov could scale model
-    if (fov >= 1.0f and fov <= 60.0f) {
-        fov -= yoffset;
-    }
-    if (fov <= 1.0f) {
-        fov = 1.0f;
-    }
-    if (fov >= 60.0f) {
-        fov = 60.0f;
-    }
+    camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        camera.ProcessKeyboard(kFormward, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        camera.ProcessKeyboard(kBackward, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        camera.ProcessKeyboard(kLeft, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        camera.ProcessKeyboard(kRight, deltaTime);
+    }
 }
 
 
@@ -323,25 +305,11 @@ void renderLoop(Shader& shader) {
         shader.setFloat("blend", blend);
         
         // OpenGL6: Camera
-        view = glm::mat4{ 1.0f };
-        float cameraSpeed = static_cast<float>(1.0f * deltaTime) * 3.0f;
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            cameraPos += cameraSpeed * cameraFront;
-        }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            cameraPos -= cameraSpeed * cameraFront;
-        }
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-        }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-        }
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        view = camera.GetViewMatrix();
         shader.setMat4("view", view);
 
         projection = glm::mat4{ 1.0f };
-        projection = glm::perspective(glm::radians(fov), static_cast<float>(SCR_WIDTH) / SCR_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(camera.Zoom), static_cast<float>(SCR_WIDTH) / SCR_HEIGHT, 0.1f, 100.0f);
         shader.setMat4("projection", projection);
 
         // draw triangle
