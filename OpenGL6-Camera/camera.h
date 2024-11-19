@@ -111,7 +111,7 @@ private:
     {
         // calculate the new Front vector
         glm::vec3 front;
-        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));  // why is cos(glm::radians(Pitch)) used here?
+        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));  // In the "Camera" section of the tutorial, x/z represents the xoz plane. Initially, the projection of the direction onto the xoz plane is calculated.
         front.y = sin(glm::radians(Pitch));
         front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
         Front = glm::normalize(front);
