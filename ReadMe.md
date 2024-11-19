@@ -33,6 +33,7 @@ glm::mat4 mat = glm::mat4(1.0f);
 
 ## Camera  
 
-在入门部分，制作摄像机章节，涉及到的推导比较多（MVP矩阵），不好理解，可以观看B站games101课程，在此也推荐两篇博客：  
+在入门部分，制作摄像机章节，涉及到的推导比较多（MVP矩阵），不好理解，可以观看B站games101课程，在此也推荐几篇博客：  
 [[图形学笔记]推导投影矩阵（知乎@小猫耳朵）](https://zhuanlan.zhihu.com/p/122411512)  
 [视图变换和投影变换矩阵的原理及推导，以及OpenGL，DirectX和Unity的对应矩阵（知乎@江玉荣）](https://zhuanlan.zhihu.com/p/362713511)  
+[深入理解透视矩阵（By zhyingkun）](https://www.zhyingkun.com/perspective/perspective/)  
