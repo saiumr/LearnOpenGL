@@ -64,8 +64,8 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
         firstMove = false;
     }
 
-    float offsetX = xpos - lastX;
-    float offsetY = lastY - ypos;  // todo: why?
+    float offsetX = xpos - lastX;  // In 3D world, right is x+, left is x-
+    float offsetY = lastY - ypos;  // In 3D world, up is y+, down is y-
     lastX = xpos;
     lastY = ypos;
 
@@ -85,7 +85,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
         pitch = -89.0f;
     }
 
-    // todo: why?
+    // camera local coordinate rotate
     glm::vec3 front{ 1.0f };
     front.x = cos(glm::radians(yaw));
     front.y = sin(glm::radians(pitch));
