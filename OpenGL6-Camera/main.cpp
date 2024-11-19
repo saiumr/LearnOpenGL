@@ -64,8 +64,8 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
         firstMove = false;
     }
 
-    float offsetX = lastX - xpos;
-    float offsetY = ypos - lastY;  // todo: why?
+    float offsetX = xpos - lastX;
+    float offsetY = lastY - ypos;  // todo: why?
     lastX = xpos;
     lastY = ypos;
 
@@ -87,9 +87,9 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 
     // todo: why?
     glm::vec3 front{ 1.0f };
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.x = cos(glm::radians(yaw));
     front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
     cameraFront = front;
 }
 
@@ -324,7 +324,7 @@ void renderLoop(Shader& shader) {
         
         // OpenGL6: Camera
         view = glm::mat4{ 1.0f };
-        float cameraSpeed = static_cast<float>(1.0f * deltaTime);
+        float cameraSpeed = static_cast<float>(1.0f * deltaTime) * 3.0f;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
             cameraPos += cameraSpeed * cameraFront;
         }

@@ -30,3 +30,9 @@ glm::mat4 mat = glm::mat4(1.0f);
 ## How to add a new project  
 
 在解决方案`LearnOpenGL.sln`上新增一个项目，配置`头文件路径`和`库文件路径`，添加需要链接的库，同时要设置好项目依赖，这些都可以参考别的项目配置怎么写的。注意配置中用到的一个宏，`$(solutionDir)`，它代表当前的解决方案路径，即：`xxx\xxx\LearnOpenGL\`。  
+
+## Camera  
+
+在入门部分，制作摄像机章节，涉及到的推导比较多（MVP矩阵），不好理解，可以观看B站games101课程，在此也推荐两篇博客：  
+[[图形学笔记]推导投影矩阵（知乎@小猫耳朵）](https://zhuanlan.zhihu.com/p/122411512)  
+[视图变换和投影变换矩阵的原理及推导，以及OpenGL，DirectX和Unity的对应矩阵（知乎@江玉荣）](https://zhuanlan.zhihu.com/p/362713511)  
