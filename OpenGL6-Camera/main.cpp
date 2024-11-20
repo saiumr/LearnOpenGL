@@ -276,6 +276,24 @@ void renderLoop(Shader& shader) {
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
 
+    glm::mat4 mmat1;
+    glm::mat4 mmat2{1.0f};
+
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            std::cout << mmat1[i][j] << ' ';
+        }
+        std::cout << '\n';
+    }
+
+    mmat2[1][0] = 1;
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            std::cout << mmat2[i][j] << ' ';
+        }
+        std::cout << '\n';
+    }
+
     // Render loop
     float blend = 0.50f;
     while (!glfwWindowShouldClose(window)) {
