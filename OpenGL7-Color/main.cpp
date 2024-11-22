@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "vertex.h"
 #include "shader.h"
+#include "camera.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -18,12 +19,21 @@ void RenderLoop();
 TEXTURE CreateTexture(const char* file_path);
 void ProcessInput(GLFWwindow* window);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
+void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
+void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 GLFWwindow* window = nullptr;
 const int kScreenWidth = 800;
 const int kScreenHeight = 600;
 // lighting
 glm::vec3 light_pos{1.2f, 1.0f, 2.0f};
+
+Camera camera{ glm::vec3 {0.0f, 1.5f, 6.0f} };
+bool firstMouse = true;
+float lastX = static_cast<float>(kScreenWidth) / 2.0f;
+float lastY = static_cast<float>(kScreenHeight) / 2.0f;
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
 
 int main(int argc, const char** argv) {
 	if (InitWindow() < 0) {
@@ -64,11 +74,19 @@ int InitWindow() {
 
 	glEnable(GL_DEPTH_TEST);
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
+	glfwSetCursorPosCallback(window, MouseCallback);
+	glfwSetScrollCallback(window, ScrollCallback);
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	return 0;
 }
 
 void RenderLoop() {
+	float currentFrame = static_cast<float>(glfwGetTime());
+	deltaTime = currentFrame - lastFrame;
+	lastFrame = currentFrame;
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, CreateTexture("container.jpg"));
 	glActiveTexture(GL_TEXTURE1);
@@ -96,8 +114,8 @@ void RenderLoop() {
 		glm::mat4 model { 1.0f };
 		glm::mat4 view { 1.0f };
 		glm::mat4 projection { 1.0f };
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
-		projection = glm::perspective(glm::radians(45.0f), (float)kScreenWidth/kScreenHeight, 0.1f, 100.0f);
+		view = camera.GetViewMatrix();
+		projection = glm::perspective(glm::radians(camera.Zoom), (float)kScreenWidth/kScreenHeight, 0.1f, 100.0f);
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
@@ -163,8 +181,47 @@ void ProcessInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
 	}
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera.ProcessKeyboard(kForward, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera.ProcessKeyboard(kBackward, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera.ProcessKeyboard(kLeft, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera.ProcessKeyboard(kRight, deltaTime);
 }
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
+}
+
+// glfw: whenever the mouse moves, this callback is called
+// -------------------------------------------------------
+void MouseCallback(GLFWwindow* window, double xposIn, double yposIn)
+{
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+	lastX = xpos;
+	lastY = ypos;
+
+	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
