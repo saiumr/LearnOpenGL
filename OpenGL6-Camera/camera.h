@@ -5,7 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 enum CameraMovement {
-	kFormward,
+    kForward,
 	kBackward,
 	kLeft,
 	kRight
@@ -65,7 +65,7 @@ public:
     {
         float velocity = MovementSpeed * deltaTime;
         glm::vec3 v { 0.0f };
-        if (direction == kFormward) {
+        if (direction == kForward) {
             v += Front * velocity;
         }
         if (direction == kBackward) {
