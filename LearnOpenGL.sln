@@ -45,6 +45,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lighting", "Lighting", "{5E55C2D9-B39D-4901-9C90-6241484F7011}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL7-Color", "OpenGL7-Color\OpenGL7-Color.vcxproj", "{05E431F1-5D0B-40D2-9A57-465A4D65A4A7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{785559F6-E673-4716-97CD-1F7C56FC63E6} = {785559F6-E673-4716-97CD-1F7C56FC63E6}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
