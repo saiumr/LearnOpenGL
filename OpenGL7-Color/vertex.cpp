@@ -79,6 +79,9 @@ void Vertex::Clean() const {
 unsigned int Vertex::get_VAO() const {
 	return VAO_;
 }
+unsigned int Vertex::get_LightVAO() const {
+    return LightVAO_;
+}
 unsigned int Vertex::get_VBO() const {
 	return VBO_;
 }
@@ -92,6 +95,7 @@ unsigned int Vertex::get_ElementCount() const {
 
 void Vertex::Init() {
 	glGenVertexArrays(1, &VAO_);
+    glGenVertexArrays(1, &LightVAO_);
     glGenBuffers(1, &VBO_);
     glGenBuffers(1, &EBO_);
 
@@ -108,8 +112,17 @@ void Vertex::Init() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
     glEnableVertexAttribArray(2);
-    
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    
+    // bind second VAO
+    glBindVertexArray(LightVAO_);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_);  // VBO_ and EBO_ has included buffer data
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }

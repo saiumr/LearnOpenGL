@@ -13,7 +13,7 @@
 using TEXTURE = unsigned int;
 
 int InitWindow();
-void RenderLoop(Vertex& vertex, Shader& shader);
+void RenderLoop();
 
 TEXTURE CreateTexture(const char* file_path);
 void ProcessInput(GLFWwindow* window);
@@ -22,19 +22,15 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 GLFWwindow* window = nullptr;
 const int kScreenWidth = 800;
 const int kScreenHeight = 600;
+// lighting
+glm::vec3 light_pos{1.2f, 1.0f, 2.0f};
 
 int main(int argc, const char** argv) {
 	if (InitWindow() < 0) {
 		return -1;
 	}
 
-	Vertex vertex;
-	Shader shader {"shader.vs", "shader.fs"};
-
-	RenderLoop(vertex, shader);
-
-	vertex.Clean();
-	shader.Clean();
+	RenderLoop();
 	glfwTerminate();
 
 	return 0;
@@ -72,11 +68,15 @@ int InitWindow() {
 	return 0;
 }
 
-void RenderLoop(Vertex& vertex, Shader& shader) {
+void RenderLoop() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, CreateTexture("container.jpg"));
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, CreateTexture("awesomeface.png"));
+
+	Vertex vertex;
+	Shader shader{"shader.vs", "shader.fs"};
+	Shader light_shader{"light.vs", "light.fs"};
 
 	shader.use();
 	shader.setInt("texture0", 0);
@@ -84,16 +84,19 @@ void RenderLoop(Vertex& vertex, Shader& shader) {
 	shader.setFloat("blend", 0.33f);
 
 	while (!glfwWindowShouldClose(window)) {
+		ProcessInput(window);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		ProcessInput(window);
+		// object
+		shader.use();
+		shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+		shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 		glm::mat4 model { 1.0f };
 		glm::mat4 view { 1.0f };
 		glm::mat4 projection { 1.0f };
-		model = glm::rotate(model, glm::radians(20 * (float)glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -8.0f));
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
 		projection = glm::perspective(glm::radians(45.0f), (float)kScreenWidth/kScreenHeight, 0.1f, 100.0f);
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
@@ -102,9 +105,25 @@ void RenderLoop(Vertex& vertex, Shader& shader) {
 		glBindVertexArray(vertex.get_VAO());
 		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);
 		
+		// light
+		light_shader.use();
+		model = glm::mat4{ 1.0f };
+		model = glm::translate(model, light_pos);
+		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
+		light_shader.setMat4("model", model);
+		light_shader.setMat4("view", view);
+		light_shader.setMat4("projection", projection);
+
+		glBindVertexArray(vertex.get_LightVAO());
+		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+
+	shader.Clean();
+	light_shader.Clean();
+	vertex.Clean();
 }
 
 TEXTURE CreateTexture(const char* file_path) {

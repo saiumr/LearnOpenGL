@@ -141,6 +141,8 @@
     <ClInclude Include="vertex.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="light.fs" />
+    <None Include="light.vs" />
     <None Include="shader.fs" />
     <None Include="shader.vs" />
   </ItemGroup>
