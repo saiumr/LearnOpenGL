@@ -20,8 +20,8 @@ void ProcessInput(GLFWwindow* window);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 
 GLFWwindow* window = nullptr;
-const int kScreenWidth = 512;
-const int kScreenHeight = 512;
+const int kScreenWidth = 800;
+const int kScreenHeight = 600;
 
 int main(int argc, const char** argv) {
 	if (InitWindow() < 0) {
@@ -84,7 +84,7 @@ void RenderLoop(Vertex& vertex, Shader& shader) {
 	shader.setFloat("blend", 0.33f);
 
 	while (!glfwWindowShouldClose(window)) {
-		glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		ProcessInput(window);
@@ -93,6 +93,8 @@ void RenderLoop(Vertex& vertex, Shader& shader) {
 		glm::mat4 view { 1.0f };
 		glm::mat4 projection { 1.0f };
 		model = glm::rotate(model, glm::radians(20 * (float)glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -8.0f));
+		projection = glm::perspective(glm::radians(45.0f), (float)kScreenWidth/kScreenHeight, 0.1f, 100.0f);
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
