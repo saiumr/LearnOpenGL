@@ -1,6 +1,9 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "vertex.h"
 #include "shader.h"
 
@@ -16,8 +19,9 @@ TEXTURE CreateTexture(const char* file_path);
 void ProcessInput(GLFWwindow* window);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 
-const int kScreenWidth = 400;
-const int kScreenHeight = 300;
+GLFWwindow* window = nullptr;
+const int kScreenWidth = 512;
+const int kScreenHeight = 512;
 
 int main(int argc, const char** argv) {
 	if (InitWindow() < 0) {
@@ -49,7 +53,7 @@ int InitWindow() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	GLFWwindow* window = glfwCreateWindow(kScreenWidth, kScreenHeight, "Lighting: Corlor", nullptr, nullptr);
+	window = glfwCreateWindow(kScreenWidth, kScreenHeight, "Lighting: Corlor", nullptr, nullptr);
 	if (!window) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		return -1;
@@ -62,13 +66,43 @@ int InitWindow() {
 		return -1;
 	}
 
+	glEnable(GL_DEPTH_TEST);
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 
 	return 0;
 }
 
 void RenderLoop(Vertex& vertex, Shader& shader) {
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, CreateTexture("container.jpg"));
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, CreateTexture("awesomeface.png"));
 
+	shader.use();
+	shader.setInt("texture0", 0);
+	shader.setInt("texture1", 1);
+	shader.setFloat("blend", 0.33f);
+
+	while (!glfwWindowShouldClose(window)) {
+		glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		ProcessInput(window);
+
+		glm::mat4 model { 1.0f };
+		glm::mat4 view { 1.0f };
+		glm::mat4 projection { 1.0f };
+		model = glm::rotate(model, glm::radians(20 * (float)glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
+		shader.setMat4("model", model);
+		shader.setMat4("view", view);
+		shader.setMat4("projection", projection);
+
+		glBindVertexArray(vertex.get_VAO());
+		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);
+		
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
 }
 
 TEXTURE CreateTexture(const char* file_path) {
