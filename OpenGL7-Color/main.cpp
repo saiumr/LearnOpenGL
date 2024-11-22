@@ -35,6 +35,8 @@ float lastY = static_cast<float>(kScreenHeight) / 2.0f;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+bool IsEquipCamera = false;
+
 int main(int argc, const char** argv) {
 	if (InitWindow() < 0) {
 		return -1;
@@ -103,6 +105,10 @@ void RenderLoop() {
 
 	while (!glfwWindowShouldClose(window)) {
 		ProcessInput(window);
+		if (IsEquipCamera) {
+			light_pos = camera.Position + glm::vec3(0.0f, 0.0f, -1.0f);
+		}
+
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -191,6 +197,9 @@ void ProcessInput(GLFWwindow* window) {
 		camera.ProcessKeyboard(kLeft, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(kRight, deltaTime);
+
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		IsEquipCamera = !IsEquipCamera;
 }
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
