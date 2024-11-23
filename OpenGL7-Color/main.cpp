@@ -85,10 +85,6 @@ int InitWindow() {
 }
 
 void RenderLoop() {
-	float currentFrame = static_cast<float>(glfwGetTime());
-	deltaTime = currentFrame - lastFrame;
-	lastFrame = currentFrame;
-
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, CreateTexture("container.jpg"));
 	glActiveTexture(GL_TEXTURE1);
@@ -104,6 +100,10 @@ void RenderLoop() {
 	shader.setFloat("blend", 0.33f);
 
 	while (!glfwWindowShouldClose(window)) {
+		float currentFrame = static_cast<float>(glfwGetTime());
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
 		ProcessInput(window);
 		if (IsEquipCamera) {
 			light_pos = camera.Position + glm::vec3(0.0f, 0.0f, -1.0f);
