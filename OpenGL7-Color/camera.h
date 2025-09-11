@@ -8,7 +8,9 @@ enum CameraMovement {
 	kForward,
 	kBackward,
 	kLeft,
-	kRight
+	kRight,
+    kUpward,
+	kDownward
 };
 
 const float YAW         = -90.0f;
@@ -60,7 +62,7 @@ public:
     }
 
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-    void ProcessKeyboard(CameraMovement direction, float deltaTime, GLboolean jump=false)
+    void ProcessKeyboard(CameraMovement direction, float deltaTime)
     {
         float velocity = MovementSpeed * deltaTime;
         glm::vec3 v { 0.0f };
@@ -75,6 +77,12 @@ public:
         }
         if (direction == kRight) {
             v += Right * velocity;
+        }
+        if (direction == kUpward) {
+            v += WorldUp * velocity;
+		}
+        if (direction == kDownward) {
+            v -= WorldUp * velocity;
         }
 
         Position += v;

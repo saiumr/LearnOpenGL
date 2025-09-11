@@ -106,7 +106,9 @@ void RenderLoop() {
 
 		ProcessInput(window);
 		if (IsEquipCamera) {
-			light_pos = camera.Position + glm::vec3(0.0f, 0.0f, -1.0f);
+			// transform light position to camera space
+			glm::mat3 camera_rotation = glm::mat3{ camera.Right, camera.Up, -camera.Front };
+			light_pos = camera.Position + camera_rotation * glm::vec3{ 0.0f, 0.0f, -2.0f };
 		}
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -197,6 +199,11 @@ void ProcessInput(GLFWwindow* window) {
 		camera.ProcessKeyboard(kLeft, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(kRight, deltaTime);
+
+	if (glfwGetKey(window, GLFW_KEY_X))
+		camera.ProcessKeyboard(kUpward, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_Z))
+		camera.ProcessKeyboard(kDownward, deltaTime);
 
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 		IsEquipCamera = !IsEquipCamera;
