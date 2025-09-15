@@ -13,6 +13,7 @@ uniform float blend;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 light_pos;
+uniform vec3 view_pos;
 
 void main()
 {
@@ -27,7 +28,13 @@ void main()
     float diff = max(dot(light_surface_normal, light_direction), 0.0f);  // dot(normal1, normal2) = cos(degree)
     vec3 diffuse = diff * lightColor;
 
-    vec3 result = (ambient + diffuse) * objectColor;
+    float specular_strength = 0.5;
+    vec3  view_direction = normalize(view_pos - FragPos);
+    vec3  light_reflect_direction = reflect(-light_direction, light_surface_normal);
+    float spec = pow(max(dot(view_direction, light_reflect_direction), 0.0f), 32);  // 32 is object's shininess'
+    vec3  specular = specular_strength * spec * lightColor;
+
+    vec3 result = (ambient + diffuse + specular) * objectColor;
     FragColor = vec4(result, 1.0f);
 
 

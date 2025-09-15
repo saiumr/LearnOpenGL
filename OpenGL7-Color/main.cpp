@@ -128,6 +128,7 @@ void RenderLoop() {
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
 		shader.setVec3("light_pos", light_pos);
+		shader.setVec3("view_pos", camera.Position);
 
 		glBindVertexArray(vertex.get_VAO());
 		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);
