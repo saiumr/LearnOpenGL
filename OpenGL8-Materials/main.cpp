@@ -129,21 +129,17 @@ void RenderLoop() {
 		shader.setVec3("view_pos", camera.Position);
 
 		// light properties
-		glm::vec3 lightColor;
-		lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
-		lightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
-		lightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
-		glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
-		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
-		shader.setVec3("light.ambient", ambientColor);
-		shader.setVec3("light.diffuse", diffuseColor);
+		shader.setVec3("light.ambient", 1.0f, 1.0f, 1.0f);
+		shader.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
 		shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
 		// material properties
-		shader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-		shader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-		shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
-		shader.setFloat("material.shininess", 32.0f);
+		// cyan plastic
+		// refer to http://devernay.free.fr/cours/opengl/materials.html
+		shader.setVec3("material.ambient", 0.0f, 0.1f, 0.06f);
+		shader.setVec3("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
+		shader.setVec3("material.specular", 0.50196078f, 0.50196078f, 0.50196078f); // specular lighting doesn't have full effect on this object's material
+		shader.setFloat("material.shininess", 0.25f * 128.0f);
 
 		glBindVertexArray(vertex.get_VAO());
 		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);
