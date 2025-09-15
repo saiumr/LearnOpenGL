@@ -22,9 +22,9 @@ void main()
     float ambient_strength = 0.2;
     vec3 ambient = ambient_strength * lightColor;
 
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(light_pos - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0f);  // dot(normal1, normal2) = cos(degree)
+    vec3 light_surface_normal = normalize(Normal);
+    vec3 light_direction = normalize(light_pos - FragPos);
+    float diff = max(dot(light_surface_normal, light_direction), 0.0f);  // dot(normal1, normal2) = cos(degree)
     vec3 diffuse = diff * lightColor;
 
     vec3 result = (ambient + diffuse) * objectColor;
