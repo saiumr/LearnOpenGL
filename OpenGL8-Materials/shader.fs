@@ -10,31 +10,44 @@ uniform sampler2D texture0;
 uniform sampler2D texture1;
 uniform float blend;
 
-uniform vec3 objectColor;
-uniform vec3 lightColor;
-uniform vec3 light_pos;
 uniform vec3 view_pos;
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
+
+struct Light {
+    vec3 position;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+uniform Material material;
+uniform Light light;
 
 void main()
 {
-    // practice1: look another side
-    // FragColor = mix(texture(texture0, TexCoord), texture(texture1, vec2(1.0 - TexCoord.x, TexCoord.y)), blend);
+    // 环境光
+    vec3 ambient = light.ambient * material.ambient;
 
-    float ambient_strength = 0.2;
-    vec3 ambient = ambient_strength * lightColor;
-
+    // 漫反射
     vec3 light_surface_normal = normalize(Normal);
-    vec3 light_direction = normalize(light_pos - FragPos);
+    vec3 light_direction = normalize(light.position - FragPos);
     float diff = max(dot(light_surface_normal, light_direction), 0.0f);  // dot(normal1, normal2) = cos(degree)
-    vec3 diffuse = diff * lightColor;
+    vec3 diffuse = light.diffuse * (diff * material.diffuse);
 
-    float specular_strength = 0.5;
+    // 镜面光
     vec3  view_direction = normalize(view_pos - FragPos);
     vec3  light_reflect_direction = reflect(-light_direction, light_surface_normal);
-    float spec = pow(max(dot(view_direction, light_reflect_direction), 0.0f), 32);  // 32 is object's shininess'
-    vec3  specular = specular_strength * spec * lightColor;
+    float spec = pow(max(dot(view_direction, light_reflect_direction), 0.0f), material.shininess);
+    vec3  specular = light.specular * (spec * material.specular);
 
-    vec3 result = (ambient + diffuse + specular) * objectColor;
+    vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0f);
 
 

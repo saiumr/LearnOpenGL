@@ -116,8 +116,6 @@ void RenderLoop() {
 
 		// object
 		shader.use();
-		shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-		shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 		glm::mat4 model { 1.0f };
 		glm::mat4 view { 1.0f };
@@ -127,8 +125,25 @@ void RenderLoop() {
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
-		shader.setVec3("light_pos", light_pos);
+		shader.setVec3("light.position", light_pos);
 		shader.setVec3("view_pos", camera.Position);
+
+		// light properties
+		glm::vec3 lightColor;
+		lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
+		lightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
+		lightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
+		glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
+		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+		shader.setVec3("light.ambient", ambientColor);
+		shader.setVec3("light.diffuse", diffuseColor);
+		shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+		// material properties
+		shader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+		shader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+		shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+		shader.setFloat("material.shininess", 32.0f);
 
 		glBindVertexArray(vertex.get_VAO());
 		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);
