@@ -35,7 +35,7 @@ float lastY = static_cast<float>(kScreenHeight) / 2.0f;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-bool IsEquipCamera = false;
+bool IsEquipCamera = true;
 
 int main(int argc, const char** argv) {
 	if (InitWindow() < 0) {
@@ -125,7 +125,7 @@ void RenderLoop() {
 		if (IsEquipCamera) {
 			// transform light position to camera space
 			glm::mat3 camera_rotation = glm::mat3{ camera.Right, camera.Up, -camera.Front };
-			light_pos = camera.Position + camera_rotation * glm::vec3{ 0.0f, 0.0f, -2.0f };
+			light_pos = camera.Position + camera_rotation * glm::vec3{ 0.0f, 0.0f, 0.5f };
 		}
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -143,11 +143,13 @@ void RenderLoop() {
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
 		shader.setVec3("light.position", light_pos);
+		shader.setVec3("light.direction", camera.Front);
+		shader.setFloat("light.cut_off", glm::cos(glm::radians(12.5f)));  // it is easy to compare
 		shader.setVec3("view_pos", camera.Position);
 
 		// light properties
 		shader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
-		shader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+		shader.setVec3("light.diffuse", 0.8f, 0.8f, 0.8f);
 		shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 		// light intensity attenuation
 		// refer to https://learnopengl-cn.github.io/02%20Lighting/05%20Light%20casters/#_2
