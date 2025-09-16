@@ -53,6 +53,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL8-Materials", "OpenGL
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL9-LightingMaps", "OpenGL9-LightingMaps\OpenGL9-LightingMaps.vcxproj", "{6A949D7C-995E-447A-8A34-84124176CCAD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL10-LightCasters", "OpenGL10-LightCasters\OpenGL10-LightCasters.vcxproj", "{7B4BD3BA-2171-4577-AA58-0B14DB400167}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -149,6 +151,14 @@ Global
 		{6A949D7C-995E-447A-8A34-84124176CCAD}.Release|x64.Build.0 = Release|x64
 		{6A949D7C-995E-447A-8A34-84124176CCAD}.Release|x86.ActiveCfg = Release|Win32
 		{6A949D7C-995E-447A-8A34-84124176CCAD}.Release|x86.Build.0 = Release|Win32
+		{7B4BD3BA-2171-4577-AA58-0B14DB400167}.Debug|x64.ActiveCfg = Debug|x64
+		{7B4BD3BA-2171-4577-AA58-0B14DB400167}.Debug|x64.Build.0 = Debug|x64
+		{7B4BD3BA-2171-4577-AA58-0B14DB400167}.Debug|x86.ActiveCfg = Debug|Win32
+		{7B4BD3BA-2171-4577-AA58-0B14DB400167}.Debug|x86.Build.0 = Debug|Win32
+		{7B4BD3BA-2171-4577-AA58-0B14DB400167}.Release|x64.ActiveCfg = Release|x64
+		{7B4BD3BA-2171-4577-AA58-0B14DB400167}.Release|x64.Build.0 = Release|x64
+		{7B4BD3BA-2171-4577-AA58-0B14DB400167}.Release|x86.ActiveCfg = Release|Win32
+		{7B4BD3BA-2171-4577-AA58-0B14DB400167}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -165,6 +175,7 @@ Global
 		{05E431F1-5D0B-40D2-9A57-465A4D65A4A7} = {5E55C2D9-B39D-4901-9C90-6241484F7011}
 		{E385F778-DD93-4DD4-9A9A-7F6D04C1C101} = {5E55C2D9-B39D-4901-9C90-6241484F7011}
 		{6A949D7C-995E-447A-8A34-84124176CCAD} = {5E55C2D9-B39D-4901-9C90-6241484F7011}
+		{7B4BD3BA-2171-4577-AA58-0B14DB400167} = {5E55C2D9-B39D-4901-9C90-6241484F7011}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {36203A89-55C5-4C3D-AE79-92B5D3E182A8}
