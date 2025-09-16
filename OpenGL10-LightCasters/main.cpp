@@ -142,13 +142,19 @@ void RenderLoop() {
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
-		shader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+		shader.setVec3("light.position", light_pos);
 		shader.setVec3("view_pos", camera.Position);
 
 		// light properties
-		shader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+		shader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
 		shader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
 		shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+		// light intensity attenuation
+		// refer to https://learnopengl-cn.github.io/02%20Lighting/05%20Light%20casters/#_2
+		// or http://www.ogre3d.org/tikiwiki/tiki-index.php?page=-Point+Light+Attenuation
+		shader.setFloat("light.constant", 1.0f);
+		shader.setFloat("light.linear", 0.09f);
+		shader.setFloat("light.quadratic", 0.032f);
 
 		// material properties
 		shader.setFloat("material.shininess", 0.5f * 128.0f);
@@ -164,7 +170,7 @@ void RenderLoop() {
 		}
 
 		// light cube
-		/*light_shader.use();
+		light_shader.use();
 		model = glm::mat4{ 1.0f };
 		model = glm::translate(model, light_pos);
 		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
@@ -173,7 +179,7 @@ void RenderLoop() {
 		light_shader.setMat4("projection", projection);
 
 		glBindVertexArray(vertex.get_LightVAO());
-		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);*/
+		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
