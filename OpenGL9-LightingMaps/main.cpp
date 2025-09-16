@@ -95,6 +95,8 @@ void RenderLoop() {
 	glBindTexture(GL_TEXTURE_2D, CreateTexture("awesomeface.png"));
 	glActiveTexture(GL_TEXTURE0 + 2);
 	glBindTexture(GL_TEXTURE_2D, CreateTexture("container2.png"));
+	glActiveTexture(GL_TEXTURE0 + 3);
+	glBindTexture(GL_TEXTURE_2D, CreateTexture("container2_specular.png"));
 
 	Vertex vertex;
 	Shader shader{"shader.vs", "shader.fs"};
@@ -104,6 +106,7 @@ void RenderLoop() {
 	shader.setInt("texture0", 0);
 	shader.setInt("texture1", 1);
 	shader.setInt("material.diffuse", 2);
+	shader.setInt("material.specular", 3);
 	shader.setFloat("blend", 0.33f);
 
 	while (!glfwWindowShouldClose(window)) {
@@ -141,7 +144,6 @@ void RenderLoop() {
 		shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
 		// material properties
-		shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
 		shader.setFloat("material.shininess", 0.5f * 128.0f);
 
 		glBindVertexArray(vertex.get_VAO());
