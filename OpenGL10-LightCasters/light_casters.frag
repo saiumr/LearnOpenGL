@@ -14,7 +14,7 @@ struct Material {
 };
 
 struct Light {
-    vec3 position;
+    vec3 direction;
 
     vec3 ambient;
     vec3 diffuse;
@@ -31,7 +31,7 @@ void main()
 
     // Âþ·´Éä
     vec3 light_surface_normal = normalize(Normal);
-    vec3 light_direction = normalize(light.position - FragPos);
+    vec3 light_direction = normalize(-light.direction);  // light_direction is diretion of Frag -> light cube
     float diff = max(dot(light_surface_normal, light_direction), 0.0f);  // dot(normal1, normal2) = cos(degree)
     vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoord));
 

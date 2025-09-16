@@ -142,7 +142,7 @@ void RenderLoop() {
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
-		shader.setVec3("light.position", light_pos);
+		shader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
 		shader.setVec3("view_pos", camera.Position);
 
 		// light properties
@@ -164,7 +164,7 @@ void RenderLoop() {
 		}
 
 		// light cube
-		light_shader.use();
+		/*light_shader.use();
 		model = glm::mat4{ 1.0f };
 		model = glm::translate(model, light_pos);
 		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
@@ -173,7 +173,7 @@ void RenderLoop() {
 		light_shader.setMat4("projection", projection);
 
 		glBindVertexArray(vertex.get_LightVAO());
-		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);*/
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
