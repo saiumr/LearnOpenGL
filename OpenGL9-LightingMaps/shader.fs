@@ -13,8 +13,7 @@ uniform float blend;
 uniform vec3 view_pos;
 
 struct Material {
-    vec3 ambient;
-    vec3 diffuse;
+    sampler2D diffuse;
     vec3 specular;
     float shininess;
 };
@@ -33,13 +32,13 @@ uniform Light light;
 void main()
 {
     // 环境光
-    vec3 ambient = light.ambient * material.ambient;
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoord));
 
     // 漫反射
     vec3 light_surface_normal = normalize(Normal);
     vec3 light_direction = normalize(light.position - FragPos);
     float diff = max(dot(light_surface_normal, light_direction), 0.0f);  // dot(normal1, normal2) = cos(degree)
-    vec3 diffuse = light.diffuse * (diff * material.diffuse);
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoord));
 
     // 镜面光
     vec3  view_direction = normalize(view_pos - FragPos);

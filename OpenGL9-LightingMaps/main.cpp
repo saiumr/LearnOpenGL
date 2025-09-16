@@ -85,10 +85,16 @@ int InitWindow() {
 }
 
 void RenderLoop() {
-	glActiveTexture(GL_TEXTURE0);
+	GLint max_render_items_count;
+	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &max_render_items_count);
+	std::cout << "max render items count: " << max_render_items_count << std::endl;  // 192
+
+	glActiveTexture(GL_TEXTURE0 + 0);
 	glBindTexture(GL_TEXTURE_2D, CreateTexture("container.jpg"));
-	glActiveTexture(GL_TEXTURE1);
+	glActiveTexture(GL_TEXTURE0 + 1);
 	glBindTexture(GL_TEXTURE_2D, CreateTexture("awesomeface.png"));
+	glActiveTexture(GL_TEXTURE0 + 2);
+	glBindTexture(GL_TEXTURE_2D, CreateTexture("container2.png"));
 
 	Vertex vertex;
 	Shader shader{"shader.vs", "shader.fs"};
@@ -97,6 +103,7 @@ void RenderLoop() {
 	shader.use();
 	shader.setInt("texture0", 0);
 	shader.setInt("texture1", 1);
+	shader.setInt("material.diffuse", 2);
 	shader.setFloat("blend", 0.33f);
 
 	while (!glfwWindowShouldClose(window)) {
@@ -134,12 +141,8 @@ void RenderLoop() {
 		shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
 		// material properties
-		// cyan plastic
-		// refer to http://devernay.free.fr/cours/opengl/materials.html
-		shader.setVec3("material.ambient", 0.0f, 0.1f, 0.06f);
-		shader.setVec3("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
-		shader.setVec3("material.specular", 0.50196078f, 0.50196078f, 0.50196078f); // specular lighting doesn't have full effect on this object's material
-		shader.setFloat("material.shininess", 0.25f * 128.0f);
+		shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+		shader.setFloat("material.shininess", 0.5f * 128.0f);
 
 		glBindVertexArray(vertex.get_VAO());
 		glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);
