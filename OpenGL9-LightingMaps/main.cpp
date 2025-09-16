@@ -97,6 +97,8 @@ void RenderLoop() {
 	glBindTexture(GL_TEXTURE_2D, CreateTexture("container2.png"));
 	glActiveTexture(GL_TEXTURE0 + 3);
 	glBindTexture(GL_TEXTURE_2D, CreateTexture("container2_specular.png"));
+	glActiveTexture(GL_TEXTURE0 + 4);
+	glBindTexture(GL_TEXTURE_2D, CreateTexture("matrix.jpg"));
 
 	Vertex vertex;
 	Shader shader{"shader.vs", "shader.fs"};
@@ -107,6 +109,7 @@ void RenderLoop() {
 	shader.setInt("texture1", 1);
 	shader.setInt("material.diffuse", 2);
 	shader.setInt("material.specular", 3);
+	shader.setInt("material.emission", 4);
 	shader.setFloat("blend", 0.33f);
 
 	while (!glfwWindowShouldClose(window)) {
