@@ -57,7 +57,7 @@ void main()
         float attenuation = 1.0 / (light.constant + light.linear * distance + 
                     light.quadratic * (distance * distance));  // Fatt = 1.0 / (Kc + Kd * distance + Kq * distance^2)
 
-        ambient *= attenuation;
+        // ambient *= attenuation;
         diffuse *= attenuation;
         specular *= attenuation;
 
