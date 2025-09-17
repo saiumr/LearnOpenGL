@@ -68,6 +68,10 @@ void Shader::setMat4(const std::string& name, glm::mat4& trans) const {
 	glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(trans));
 }
 
+void Shader::setMat3(const std::string& name, glm::mat3& trans) const {
+	glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(trans));
+}
+
 void Shader::Clean() const {
 	glDeleteProgram(this->ID);
 }

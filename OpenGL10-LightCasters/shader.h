@@ -29,6 +29,7 @@ public:
 	void setVec3(const std::string& name, float a, float b, float c) const;
 	void setVec3(const std::string& name, glm::vec3& v) const;
 	void setMat4(const std::string& name, glm::mat4& trans) const;
+	void setMat3(const std::string& name, glm::mat3& trans) const;
 	void Clean() const;
 
 private:

@@ -168,6 +168,11 @@ void RenderLoop() {
 			float angle { 20.0f * i };
 			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 			shader.setMat4("model", model);
+
+			// 计算法向量矩阵（模型矩阵的逆转置）
+			glm::mat3 normalMatrix{ glm::transpose(glm::inverse(glm::mat3(model))) };
+			shader.setMat3("normalMatrix", normalMatrix);
+
 			glDrawElements(GL_TRIANGLES, vertex.get_ElementCount(), GL_UNSIGNED_INT, 0);
 		}
 

@@ -42,8 +42,6 @@ void main()
         vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoord));
 
         // 漫反射
-        // 目前没有做法向量随着container旋转
-        // 所以旋转过的container表面法向量是错误的，导致某些面看不到聚光效果
         vec3 light_surface_normal = normalize(Normal);
         float diff = max(dot(light_surface_normal, light_direction), 0.0f);  // dot(normal1, normal2) = cos(degree)
         vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoord));
