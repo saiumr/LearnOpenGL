@@ -61,7 +61,7 @@ int InitWindow() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	window = glfwCreateWindow(kScreenWidth, kScreenHeight, "Lighting: Ambient light and Difuse light", nullptr, nullptr);
+	window = glfwCreateWindow(kScreenWidth, kScreenHeight, "Lighting: Materials", nullptr, nullptr);
 	if (!window) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		return -1;
