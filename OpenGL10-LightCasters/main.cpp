@@ -145,6 +145,7 @@ void RenderLoop() {
 		shader.setVec3("light.position", light_pos);
 		shader.setVec3("light.direction", camera.Front);
 		shader.setFloat("light.cut_off", glm::cos(glm::radians(12.5f)));  // it is easy to compare
+		shader.setFloat("light.outer_cut_off", glm::cos(glm::radians(17.5f)));
 		shader.setVec3("view_pos", camera.Position);
 
 		// light properties

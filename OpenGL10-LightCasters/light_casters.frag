@@ -17,6 +17,7 @@ struct Light {
     vec3 position;
     vec3 direction;
     float cut_off;
+    float outer_cut_off;
 
     vec3 ambient;
     vec3 diffuse;
@@ -37,7 +38,7 @@ void main()
     // 聚光计算（摄像机为射点，但是光强还要用cube提供）
     // 主要是模拟手电筒视角
     float theta = dot(light_direction, normalize(-light.direction));
-    if (theta > light.cut_off) {  // 范围之内正常显示
+
         // 环境光
         vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoord));
 
@@ -52,21 +53,21 @@ void main()
         float spec = pow(max(dot(view_direction, light_reflect_direction), 0.0f), material.shininess);
         vec3  specular = light.specular * spec * vec3(texture(material.specular, TexCoord));
 
+        // spotlight (soft edge)
+        float epsilon = (light.cut_off - light.outer_cut_off);
+        float intensity = clamp((theta - light.outer_cut_off)/ epsilon, 0.0f, 1.0f);
+        diffuse *= intensity;
+        specular *= intensity;
+
         // 计算光强衰减
         float distance = length(light.position - FragPos);
         float attenuation = 1.0 / (light.constant + light.linear * distance + 
                     light.quadratic * (distance * distance));  // Fatt = 1.0 / (Kc + Kd * distance + Kq * distance^2)
 
-        // ambient *= attenuation;
+        ambient *= attenuation;
         diffuse *= attenuation;
         specular *= attenuation;
 
         vec3 result = ambient + diffuse + specular;
         FragColor = vec4(result, 1.0f);
-    } else {
-        // 范围之外只有环境光
-        FragColor = vec4(light.ambient * vec3(texture(material.diffuse, TexCoord)), 1.0f);
-    }
-
-
 }
