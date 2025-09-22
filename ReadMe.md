@@ -37,3 +37,11 @@ glm::mat4 mat = glm::mat4(1.0f);
 [[图形学笔记]推导投影矩阵（知乎@小猫耳朵）](https://zhuanlan.zhihu.com/p/122411512)  
 [视图变换和投影变换矩阵的原理及推导，以及OpenGL，DirectX和Unity的对应矩阵（知乎@江玉荣）](https://zhuanlan.zhihu.com/p/362713511)  
 [深入理解透视矩阵（By zhyingkun）](https://www.zhyingkun.com/perspective/perspective/)  
+
+## assimp  
+
+转换模型数据文件为opengl可以识别的形式  
+
+也许你需要自行编译库文件：[assimp](https://github.com/assimp/assimp/blob/master/Build.md)
+
+添加.lib链接库，然后将动态库`assimp-vc142-mt.dll`添加到vs的资源文件目录下，就不用手动拷贝到可执行文件的目录了。  
