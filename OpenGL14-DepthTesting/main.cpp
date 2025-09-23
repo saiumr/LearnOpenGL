@@ -127,6 +127,7 @@ int InitWindow() {
 	}
 
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_ALWAYS);  // always pass the depth test (same effect as glDisable(GL_DEPTH_TEST)) 后渲染的总是有画面
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 	glfwSetCursorPosCallback(window, MouseCallback);
 	glfwSetScrollCallback(window, ScrollCallback);
