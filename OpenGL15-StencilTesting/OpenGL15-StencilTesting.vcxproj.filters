@@ -26,8 +26,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="depth_testing.frag" />
-    <None Include="depth_testing.vert" />
+    <None Include="stencil_testing.frag" />
+    <None Include="stencil_testing.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="floor.png">

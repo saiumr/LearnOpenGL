@@ -51,7 +51,7 @@ void RenderLoop() {
 	unsigned int plane_texture { LoadTexture("floor.png") };
 
 	Vertex vertex;
-	Shader shader {"depth_testing.vert", "depth_testing.frag"};
+	Shader shader {"stencil_testing.vert", "stencil_testing.frag"};
 
 	shader.use();
 	shader.setInt("texture0", 0);    // set GL_TEXTURE0 to texture0 firstly
@@ -113,7 +113,7 @@ int InitWindow() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	window = glfwCreateWindow(kScreenWidth, kScreenHeight, "Advanced: Depth Testing", nullptr, nullptr);
+	window = glfwCreateWindow(kScreenWidth, kScreenHeight, "Advanced: Stencil Testing", nullptr, nullptr);
 	if (!window) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		return -1;
