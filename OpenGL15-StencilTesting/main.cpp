@@ -127,6 +127,8 @@ int InitWindow() {
 	}
 
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS); // default
+
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 	glfwSetCursorPosCallback(window, MouseCallback);
 	glfwSetScrollCallback(window, ScrollCallback);
