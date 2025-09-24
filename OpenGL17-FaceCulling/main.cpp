@@ -78,12 +78,20 @@ void RenderLoop() {
 		shader.setMat4("projection", projection);
 
 		// cube
+		// 下面三个功能设置让我们获得了只调用glEnable(GL_CULL_FACE)一样的效果
+		// 因为OpenGL默认剔除的是背面，正面是逆时针为顶点顺序绘制的面
+		glEnable(GL_CULL_FACE); // enable face culling when drawing cube
+		glCullFace(GL_FRONT);   // 定义只剔除正面
+		glFrontFace(GL_CW);     // 定义顶点顺序为顺时针时为正面（默认逆时针为正面）
 		glBindVertexArray(vertex.cubeVAO);
 		glActiveTexture(GL_TEXTURE0);  // active GL_TEXTURE0 then bind texture
 		glBindTexture(GL_TEXTURE_2D, cube_texture);
 		model = glm::scale(model, glm::vec3(2.0f));
 		shader.setMat4("model", model);
 		vertex.Draw(vertex.cubeVAO);  // first cube
+
+		// 某些对象的正面和背面都需要被渲染，记得达到目的后禁用面剔除
+		glDisable(GL_CULL_FACE); // disable face culling when drawing other object
 
 		glBindVertexArray(0);
 

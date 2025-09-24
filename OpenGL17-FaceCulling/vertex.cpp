@@ -2,36 +2,38 @@
 #include <functional>
 
 float cube_vertices[] = {
+	// 确保从同一侧观察box时，相对的两个面，正面顶点顺序是逆时针，背面顶点顺序是顺时针即可
+	// 环绕观察定义顶点时，都按照逆时针顺序定义顶点
     // position        // texture coord (S,T,[R])  // normal vector
-    // bottom face (image your eyes in box and staring straight at a face)
-    -0.5f,-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, // bottom-left
-     0.5f,-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, // bottom-right
-     0.5f,-0.5f,-0.5f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f, // top-right
-    -0.5f,-0.5f,-0.5f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, // top-left
+    // bottom face (eyes around box)
+    -0.5f,-0.5f,-0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, // bottom-left
+     0.5f,-0.5f,-0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, // bottom-right
+     0.5f,-0.5f, 0.5f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f, // top-right
+    -0.5f,-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, // top-left
 
     // back face
-    -0.5f,-0.5f,-0.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // bottom-left
-     0.5f,-0.5f,-0.5f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f, // bottom-right
-     0.5f, 0.5f,-0.5f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, // top-right
-    -0.5f, 0.5f,-0.5f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // top-left
+     0.5f,-0.5f,-0.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // bottom-left
+    -0.5f,-0.5f,-0.5f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f, // bottom-right
+    -0.5f, 0.5f,-0.5f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, // top-right
+     0.5f, 0.5f,-0.5f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // top-left
 
     // left face
-    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+    -0.5f,-0.5f,-0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
     -0.5f,-0.5f, 0.5f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, // bottom-right
-    -0.5f,-0.5f,-0.5f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, // top-right
+    -0.5f, 0.5f, 0.5f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, // top-right
     -0.5f, 0.5f,-0.5f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, // top-left
 
     // right face
      0.5f,-0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-     0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom-right
+     0.5f,-0.5f,-0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom-right
      0.5f, 0.5f,-0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // top-right
-     0.5f,-0.5f,-0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // top-left
+     0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // top-left
 
      // top face
-     0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom-left
-    -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-    -0.5f, 0.5f,-0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, // top-right
-     0.5f, 0.5f,-0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // top-left
+    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom-left
+     0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom-right
+     0.5f, 0.5f,-0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, // top-right
+    -0.5f, 0.5f,-0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // top-left
 
      // front face
     -0.5f,-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-left
@@ -41,6 +43,7 @@ float cube_vertices[] = {
 };
 
 // a cube
+// image your eyes move around box and staring straight at every face, ensure that each triangle is drawn in a counterclockwise order
 unsigned int cube_indices[] = {
     // bottom face
     0, 1, 2,
