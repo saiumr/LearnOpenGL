@@ -39,6 +39,9 @@
     <Image Include="floor.jpg">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="blending_transparent_window.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

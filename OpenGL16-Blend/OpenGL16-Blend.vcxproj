@@ -138,6 +138,7 @@
     <None Include="blending.vert" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="blending_transparent_window.png" />
     <Image Include="floor.jpg" />
     <Image Include="grass.png" />
     <Image Include="marble.png" />

@@ -110,6 +110,9 @@ void Vertex::Clean() const {
 	glDeleteVertexArrays(1, &planeVAO);
     glDeleteBuffers(1, &planeVBO);
     glDeleteBuffers(1, &planeEBO);
+    glDeleteVertexArrays(1, &vegatationVAO);
+    glDeleteBuffers(1, &vegatationVBO);
+    glDeleteBuffers(1, &vegatationEBO);
 }
 
 void Vertex::Init() {
@@ -143,11 +146,6 @@ void Vertex::Init() {
 	// EBO must bind after VAO bind
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_indices), cube_indices, GL_STATIC_DRAW);
-
-	// unbind VAO, VBO, EBO
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     
     // set second VAO
     glBindVertexArray(planeVAO);

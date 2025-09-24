@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
+#include <map>
 #include "vertex.h"
 #include "shader.h"
 #include "camera.h"
@@ -50,7 +51,7 @@ int main(int argc, const char** argv) {
 void RenderLoop() {
 	unsigned int cube_texture  { LoadTexture("marble.png") };
 	unsigned int plane_texture { LoadTexture("floor.jpg") };
-	unsigned int grass_texture { LoadTexture("grass.png") };
+	unsigned int grass_texture { LoadTexture("blending_transparent_window.png") };
 
 	Vertex vertex;
 	Shader shader {"blending.vert", "blending.frag"};
@@ -105,12 +106,26 @@ void RenderLoop() {
 		shader.setMat4("model", model);
 		vertex.Draw(vertex.planeVAO);
 
-		// grass
+		// 为了避免深度测试的 “非黑即白”的保留与剔除和透明混合的 “叠加需求” 冲突
+		// 1. 先绘制所有不透明的物体。
+		// 2. 对所有透明的物体排序。
+		// 3. 按顺序绘制所有透明的物体。（绘制时先远后近）
+		// 我们每一帧都需要对透明物体排序，因为摄像机和物体都可能动。（本例中只有摄像机动）
+
+		// windows positions
+		std::map<float, glm::vec3> windows_position_sorted;
+		std::for_each(vegetation_positions.begin(), vegetation_positions.end(), [&](const glm::vec3& pos) {
+			float distance = glm::length(camera.Position - pos);
+			windows_position_sorted[distance] = pos;  // sorted automatically by key (as distance increasing)
+			});
+
+		// windows
 		glBindVertexArray(vertex.vegatationVAO);
 		glBindTexture(GL_TEXTURE_2D, grass_texture);
-		std::for_each(vegetation_positions.begin(), vegetation_positions.end(), [&](const glm::vec3& pos) {
+		// reverse order: draw from farthest to nearest
+		std::for_each(windows_position_sorted.rbegin(), windows_position_sorted.rend(), [&](const auto& window_pos) {
 			model = glm::mat4 { 1.0f };
-			model = glm::translate(model, pos);
+			model = glm::translate(model, window_pos.second);
 			shader.setMat4("model", model);
 			vertex.Draw(vertex.vegatationVAO);
 			});
@@ -150,6 +165,10 @@ int InitWindow() {
 	}
 
 	glEnable(GL_DEPTH_TEST);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // final_color = src_color * src_alpha + dst_color * (1 - src_alpha)
+
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 	glfwSetCursorPosCallback(window, MouseCallback);
 	glfwSetScrollCallback(window, ScrollCallback);
