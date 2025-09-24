@@ -30,13 +30,13 @@
     <None Include="blending.vert" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="floor.png">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="marble.png">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="grass.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="floor.jpg">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
