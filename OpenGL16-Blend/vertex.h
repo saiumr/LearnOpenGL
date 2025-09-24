@@ -3,18 +3,23 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+using VAOType = unsigned int;
+
 class Vertex {
 public:
 	Vertex();
 	void Draw(unsigned int VAO);
 	void Clean() const;
 
-	unsigned int cubeVAO;
+	VAOType cubeVAO;
 	unsigned int cubeVBO;
 	unsigned int cubeEBO;
-	unsigned int planeVAO;
+	VAOType planeVAO;
 	unsigned int planeVBO;
 	unsigned int planeEBO;
+	VAOType vegatationVAO;
+	unsigned int vegatationVBO;
+	unsigned int vegatationEBO;
 
 private:
 	void Init();

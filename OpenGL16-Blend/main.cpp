@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm>
 #include "vertex.h"
 #include "shader.h"
 #include "camera.h"
@@ -49,12 +50,22 @@ int main(int argc, const char** argv) {
 void RenderLoop() {
 	unsigned int cube_texture  { LoadTexture("marble.png") };
 	unsigned int plane_texture { LoadTexture("floor.png") };
+	unsigned int grass_texture { LoadTexture("grass.png") };
 
 	Vertex vertex;
 	Shader shader {"blending.vert", "blending.frag"};
 
 	shader.use();
 	shader.setInt("texture0", 0);    // set GL_TEXTURE0 to texture0 firstly
+
+	// grass positions
+	std::vector<glm::vec3> vegetation_positions {
+		glm::vec3 { -1.7f, 0.0f, -0.28f },
+		glm::vec3 {  1.5f, 0.0f, -0.51f },
+		glm::vec3 {  0.0f, 0.0f,  1.7f },
+		glm::vec3 { -0.3f, 0.0f, -2.3f },
+		glm::vec3 {  0.8f, 0.0f,  0.4f }
+	};
 
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
@@ -93,7 +104,19 @@ void RenderLoop() {
 		model = glm::mat4{ 1.0f };
 		shader.setMat4("model", model);
 		vertex.Draw(vertex.planeVAO);
+
+		// grass
+		glBindVertexArray(vertex.vegatationVAO);
+		glBindTexture(GL_TEXTURE_2D, grass_texture);
+		std::for_each(vegetation_positions.begin(), vegetation_positions.end(), [&](const glm::vec3& pos) {
+			model = glm::mat4 { 1.0f };
+			model = glm::translate(model, pos);
+			shader.setMat4("model", model);
+			vertex.Draw(vertex.vegatationVAO);
+			});
+
 		glBindVertexArray(0);
+
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -143,7 +166,7 @@ unsigned int LoadTexture(const char* file_path) {
 	int width, height, nrComponents;
 	unsigned char* data = stbi_load(file_path, &width, &height, &nrComponents, 0);
 	if (data) {
-		GLenum format;
+		GLenum format { GL_RGB };
 		if (nrComponents == 1)
 			format = GL_RED;
 		else if (nrComponents == 3)

@@ -83,6 +83,22 @@ unsigned int plane_indices[] = {
     3, 4, 5
 };
 
+float vegatation_vertices[] = {
+    // positions          // texture Coords (swapped y coordinates because texture is flipped upside down)
+     0.0f, -0.5f,  0.5f,  0.0f, 1.0f,
+     0.0f, -0.5f, -0.5f,  1.0f, 1.0f,
+     0.0f,  0.5f,  0.5f,  0.0f, 0.0f,
+
+     0.0f,  0.5f, -0.5f,  1.0f, 0.0f,
+     0.0f,  0.5f,  0.5f,  0.0f, 0.0f,
+     0.0f, -0.5f, -0.5f,  1.0f, 1.0f
+};
+
+unsigned int vegatation_indices[] = {
+    0, 1, 2,
+    3, 4, 5
+};
+
 Vertex::Vertex() {
     Init();
 }
@@ -97,12 +113,16 @@ void Vertex::Clean() const {
 }
 
 void Vertex::Init() {
+    // Gen VAO VBO EBO
 	glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
     glGenBuffers(1, &cubeEBO);
     glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &planeVBO);
     glGenBuffers(1, &planeEBO);
+    glGenVertexArrays(1, &vegatationVAO);
+    glGenBuffers(1, &vegatationVBO);
+    glGenBuffers(1, &vegatationEBO);
 
 	// bind first VAO
     glBindVertexArray(cubeVAO);
@@ -141,15 +161,29 @@ void Vertex::Init() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, planeEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(plane_indices), plane_indices, GL_STATIC_DRAW);
 
+	// vegetation VAO
+	glBindVertexArray(vegatationVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, vegatationVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vegatation_vertices), vegatation_vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);  // position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (void*)0);
+    glEnableVertexAttribArray(1);  // texture coord
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vegatationEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vegatation_indices), vegatation_indices, GL_STATIC_DRAW);
+
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);  // EBO must unbind after VAO unbind
 }
 
-void Vertex::Draw(unsigned int VAO) {
+void Vertex::Draw(VAOType VAO) {
     if (VAO == cubeVAO) {
         glDrawElements(GL_TRIANGLES, sizeof(cube_indices)/sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     } else if (VAO == planeVAO) {
         glDrawElements(GL_TRIANGLES, sizeof(plane_indices)/sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+    } else if (VAO == vegatationVAO) {
+		glDrawElements(GL_TRIANGLES, sizeof(vegatation_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     }
 }

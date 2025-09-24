@@ -139,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="floor.png" />
+    <Image Include="grass.png" />
     <Image Include="marble.png" />
   </ItemGroup>
   <ItemGroup>
