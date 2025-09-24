@@ -28,6 +28,7 @@
   <ItemGroup>
     <None Include="stencil_testing.frag" />
     <None Include="stencil_testing.vert" />
+    <None Include="stencil_single_testing.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="floor.png">

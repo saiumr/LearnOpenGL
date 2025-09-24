@@ -51,7 +51,8 @@ void RenderLoop() {
 	unsigned int plane_texture { LoadTexture("floor.png") };
 
 	Vertex vertex;
-	Shader shader {"stencil_testing.vert", "stencil_testing.frag"};
+	Shader shader{ "stencil_testing.vert", "stencil_testing.frag" };
+	Shader single_color_shader {"stencil_testing.vert", "stencil_single_testing.frag"};
 
 	shader.use();
 	shader.setInt("texture0", 0);    // set GL_TEXTURE0 to texture0 firstly
@@ -64,19 +65,36 @@ void RenderLoop() {
 		ProcessInput(window);
 
 		glClearColor(0.15f, 0.16f, 0.18f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		// object
-		shader.use();
-
 		glm::mat4 model      { 1.0f };
 		glm::mat4 view       { camera.GetViewMatrix() };
 		glm::mat4 projection { glm::perspective(glm::radians(camera.Zoom), (float)kScreenWidth / kScreenHeight, 0.1f, 100.0f) };
+		
+		single_color_shader.use();
+		single_color_shader.setMat4("model", model);
+		single_color_shader.setMat4("view", view);
+		single_color_shader.setMat4("projection", projection);
+		
+		shader.use();
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
 
-		// cubes
+		// 禁止写入模板缓冲
+		glStencilMask(0x00);
+		// plane
+		glBindVertexArray(vertex.planeVAO);
+		glBindTexture(GL_TEXTURE_2D, plane_texture);
+		model = glm::mat4{ 1.0f };
+		shader.setMat4("model", model);
+		vertex.Draw(vertex.planeVAO);
+
+		// 总是通过模板测试，并将参考值1写入模板缓冲
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glStencilMask(0xFF);
+		// cubes 渲染物体时会更新模板缓冲
 		glBindVertexArray(vertex.cubeVAO);
 		glActiveTexture(GL_TEXTURE0);  // active GL_TEXTURE0 then bind texture
 		glBindTexture(GL_TEXTURE_2D, cube_texture);
@@ -87,18 +105,35 @@ void RenderLoop() {
 		shader.setMat4("model", model);
 		vertex.Draw(vertex.cubeVAO);  // second cube
 
-		// plane
-		glBindVertexArray(vertex.planeVAO);
-		glBindTexture(GL_TEXTURE_2D, plane_texture);
+		// 绘制边框
+		// 只绘制模板缓冲中不等于1的部分（即物体的边框部分）
+		// 禁用模版测试
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		glDisable(GL_DEPTH_TEST);  // 此处禁用深度测试，保证边框一定绘制在物体上方（边框是后渲染的）
+		
+		single_color_shader.use();
+		float scale = 1.1f; // scale cube as frame
+		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+		model = glm::scale(model, glm::vec3(scale, scale, scale));
+		single_color_shader.setMat4("model", model);
+		vertex.Draw(vertex.cubeVAO);  // first cube frame
 		model = glm::mat4{ 1.0f };
-		shader.setMat4("model", model);
-		vertex.Draw(vertex.planeVAO);
+		model = glm::scale(model, glm::vec3(scale, scale, scale));
+		single_color_shader.setMat4("model", model);
+		vertex.Draw(vertex.cubeVAO);  // second cube frame
+
 		glBindVertexArray(0);
+
+		glStencilMask(0xFF);  // 恢复写入模板缓冲，实际只需要恢复写入即可，glClear(GL_STENCIL_BUFFER_BIT)会重置模板缓冲
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);
+		glEnable(GL_DEPTH_TEST);  // 重新启用深度测试
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
+	single_color_shader.Clean();
 	shader.Clean();
 	vertex.Clean();
 }
@@ -128,6 +163,10 @@ int InitWindow() {
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS); // default
+
+	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);        // 模版测试不相等时pass，参考值为1，掩码为0xFF
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);  // 模版测试和深度测试都通过时，将参考值1写入模版缓冲
 
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 	glfwSetCursorPosCallback(window, MouseCallback);
