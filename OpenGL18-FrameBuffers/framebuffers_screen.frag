@@ -5,6 +5,9 @@ in vec2 TexCoords;
 
 uniform sampler2D screenTexture;
 
+uniform vec2  screenSize;  // 屏幕分辨率（如800x600）
+uniform float pixelSize;  // 像素块大小（如10.0）
+
 void main()
 {
     // no post-processing
@@ -12,6 +15,12 @@ void main()
     vec3 col = texture(screenTexture, TexCoords).rgb;
     FragColor = vec4(col, 1.0);
     */
+
+    // pixelate 像素化
+    // 计算像素块的坐标（将UV坐标按pixelSize取整）
+    vec2 pixelCoords = floor(TexCoords * screenSize / pixelSize) * pixelSize / screenSize;
+    // 采样区块中心的颜色
+    FragColor = texture(screenTexture, pixelCoords);
 
     // invert color 反相
     /*
@@ -27,6 +36,7 @@ void main()
 
     // kernel effect 核效果
     // 选取不同的核值，产生不同效果，注意，一般四周和中心核值和为1，不然图像亮度可能变化
+    /*
     float offset = 1.0 / 300.0;
     vec2 offsets[9] = vec2[](
         vec2(-offset,  offset), // 左上
@@ -78,4 +88,5 @@ void main()
         col += sampleTex[i] * kernel_myself[i];
 
     FragColor = vec4(col, 1.0);
+    */
 } 

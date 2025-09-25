@@ -58,6 +58,8 @@ void RenderLoop() {
 	shader.setInt("texture0", 0);    // set GL_TEXTURE0 to texture0 firstly
 	screen_shader.use();
 	screen_shader.setInt("screenTexture", 0);
+	screen_shader.setVec2("screenSize", kScreenWidth, kScreenHeight);
+	screen_shader.setFloat("pixelSize", 10.0f);
 
 	// framebuffer configuration
 	unsigned int framebuffer;
