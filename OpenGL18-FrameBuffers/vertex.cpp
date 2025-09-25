@@ -103,16 +103,29 @@ unsigned int vegatation_indices[] = {
 };
 
 float quad_vertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-    // positions   // texCoords
-    -1.0f,  1.0f,  0.0f, 1.0f,
-    -1.0f, -1.0f,  0.0f, 0.0f,
-     1.0f, -1.0f,  1.0f, 0.0f,
-     1.0f,  1.0f,  1.0f, 1.0f
+    // positions        // texCoords
+    -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+    -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+     1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+     1.0f,  1.0f, 0.0f, 1.0f, 1.0f
 };
 
 unsigned int quad_indices[] = {
     0, 1, 2,
 	2, 3, 0
+};
+
+float screen_quad_vertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+    // positions         // texCoords
+    -5.0f,  9.5f, -5.0f, 0.0f, 1.0f,
+    -5.0f, -0.5f, -5.0f, 0.0f, 0.0f,
+     5.0f, -0.5f, -5.0f, 1.0f, 0.0f,
+     5.0f,  9.5f, -5.0f, 1.0f, 1.0f
+};
+
+unsigned int screen_quad_indices[] = {
+    0, 1, 2,
+    2, 3, 0
 };
 
 Vertex::Vertex() {
@@ -132,6 +145,9 @@ void Vertex::Clean() const {
     glDeleteVertexArrays(1, &quadVAO);
 	glDeleteBuffers(1, &quadVBO);
 	glDeleteBuffers(1, &quadEBO);
+	glDeleteVertexArrays(1, &screen_quadVAO);
+	glDeleteBuffers(1, &screen_quadVBO);
+	glDeleteBuffers(1, &screen_quadEBO);
 }
 
 void Vertex::Init() {
@@ -148,6 +164,9 @@ void Vertex::Init() {
 	glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
 	glGenBuffers(1, &quadEBO);
+	glGenVertexArrays(1, &screen_quadVAO);
+	glGenBuffers(1, &screen_quadVBO);
+	glGenBuffers(1, &screen_quadEBO);
 
 	// bind first VAO
     glBindVertexArray(cubeVAO);
@@ -198,11 +217,22 @@ void Vertex::Init() {
 	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);  // position
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GL_FLOAT), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (void*)0);
 	glEnableVertexAttribArray(1);  // texture coord
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GL_FLOAT), (void*)(2 * sizeof(GL_FLOAT)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quad_indices), quad_indices, GL_STATIC_DRAW);
+
+	// screen quad VAO
+	glBindVertexArray(screen_quadVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, screen_quadVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(screen_quad_vertices), screen_quad_vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);  // position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (void*)0);
+	glEnableVertexAttribArray(1);  // texture coord
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, screen_quadEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(screen_quad_vertices), screen_quad_indices, GL_STATIC_DRAW);
 
 	// unbind VAO VBO EBO
     glBindVertexArray(0);
@@ -219,5 +249,7 @@ void Vertex::Draw(VAOType VAO) {
 		glDrawElements(GL_TRIANGLES, sizeof(vegatation_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     } else if (VAO == quadVAO) {
 		glDrawElements(GL_TRIANGLES, sizeof(quad_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+	} else if (VAO == screen_quadVAO) {
+        glDrawElements(GL_TRIANGLES, sizeof(screen_quad_vertices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     }
 }

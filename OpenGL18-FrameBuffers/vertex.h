@@ -23,6 +23,9 @@ public:
 	VAOType quadVAO;
 	unsigned int quadVBO;
 	unsigned int quadEBO;
+	VAOType screen_quadVAO;
+	unsigned int screen_quadVBO;
+	unsigned int screen_quadEBO;
 
 private:
 	void Init();

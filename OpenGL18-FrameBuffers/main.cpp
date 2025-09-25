@@ -69,7 +69,7 @@ void RenderLoop() {
 	unsigned int texture_colorbuffer;
 	glGenTextures(1, &texture_colorbuffer);
 	glBindTexture(GL_TEXTURE_2D, texture_colorbuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, kScreenWidth, kScreenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 512, 512, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_colorbuffer, 0);
@@ -77,7 +77,7 @@ void RenderLoop() {
 	unsigned int rbo;
 	glGenRenderbuffers(1, &rbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, kScreenWidth, kScreenHeight); // use a single renderbuffer object for both a depth AND stencil buffer.
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 512, 512); // use a single renderbuffer object for both a depth AND stencil buffer.
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // now actually attach it
 	// now that we actually created the framebuffer and added all attachments we want to check if it is complete
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -103,6 +103,8 @@ void RenderLoop() {
 		shader.use();
 
 		glm::mat4 model      { 1.0f };
+
+		// make mirror texture
 		glm::mat4 view       { camera.GetViewMatrix() };
 		glm::mat4 projection { glm::perspective(glm::radians(camera.Zoom), (float)kScreenWidth / kScreenHeight, 0.1f, 100.0f) };
 		shader.setMat4("model", model);
@@ -131,15 +133,48 @@ void RenderLoop() {
 
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-		// clear all relevant buffers
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
-		glClear(GL_COLOR_BUFFER_BIT);
+
+		// the same background color
+		// clear all rexlevant buffers
+		glClearColor(0.15f, 0.16f, 0.18f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// Draw scene on normal screen
+		model = glm::mat4 {1.0f};
+		view = camera.GetViewMatrix();
+		shader.setMat4("view", view);
+
+		// cubes
+		glEnable(GL_CULL_FACE);
+		glBindVertexArray(vertex.cubeVAO);
+		glActiveTexture(GL_TEXTURE0);  // active GL_TEXTURE0 then bind texture
+		glBindTexture(GL_TEXTURE_2D, cube_texture);
+		model = glm::translate(model, glm::vec3(-2.0f, 0.0f, -2.0f));
+		shader.setMat4("model", model);
+		vertex.Draw(vertex.cubeVAO);  // first cube
+		model = glm::mat4{ 1.0f };
+		shader.setMat4("model", model);
+		vertex.Draw(vertex.cubeVAO);  // second cube
+		glDisable(GL_CULL_FACE);
+
+		// plane
+		glBindVertexArray(vertex.planeVAO);
+		glBindTexture(GL_TEXTURE_2D, plane_texture);
+		model = glm::mat4{ 1.0f };
+		shader.setMat4("model", model);
+		vertex.Draw(vertex.planeVAO);
+
+		//glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 
 		screen_shader.use();
-		glBindVertexArray(vertex.quadVAO);
+		model = glm::mat4 { 1.0f };
+		view = camera.GetViewMatrix();
+		screen_shader.setMat4("model", model);
+		screen_shader.setMat4("view", view);
+		screen_shader.setMat4("projection", projection);
+		glBindVertexArray(vertex.screen_quadVAO);
 		glBindTexture(GL_TEXTURE_2D, texture_colorbuffer);	// use the color attachment texture as the texture of the quad plane
-		vertex.Draw(vertex.quadVAO);
+		vertex.Draw(vertex.screen_quadVAO);
 		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);
