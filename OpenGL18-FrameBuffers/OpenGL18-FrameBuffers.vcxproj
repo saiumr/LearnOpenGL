@@ -135,8 +135,8 @@
   <ItemGroup>
     <None Include="framebuffers.frag" />
     <None Include="framebuffers.vert" />
-    <None Include="framebuffers_screen.frag" />
     <None Include="framebuffers_screen.vert" />
+    <None Include="framebuffers_screen.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="floor.jpg" />

@@ -20,6 +20,9 @@ public:
 	VAOType vegatationVAO;
 	unsigned int vegatationVBO;
 	unsigned int vegatationEBO;
+	VAOType quadVAO;
+	unsigned int quadVBO;
+	unsigned int quadEBO;
 
 private:
 	void Init();
