@@ -232,7 +232,7 @@ void Vertex::Init() {
 	glEnableVertexAttribArray(1);  // texture coord
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, screen_quadEBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(screen_quad_vertices), screen_quad_indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(screen_quad_indices), screen_quad_indices, GL_STATIC_DRAW);
 
 	// unbind VAO VBO EBO
     glBindVertexArray(0);
@@ -250,6 +250,6 @@ void Vertex::Draw(VAOType VAO) {
     } else if (VAO == quadVAO) {
 		glDrawElements(GL_TRIANGLES, sizeof(quad_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 	} else if (VAO == screen_quadVAO) {
-        glDrawElements(GL_TRIANGLES, sizeof(screen_quad_vertices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, sizeof(screen_quad_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     }
 }
