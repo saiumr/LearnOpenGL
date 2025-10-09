@@ -33,6 +33,8 @@
   <ItemGroup>
     <None Include="cubemaps.frag" />
     <None Include="cubemaps.vert" />
+    <None Include="skybox.vert" />
+    <None Include="skybox.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

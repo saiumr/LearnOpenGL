@@ -138,6 +138,8 @@
   <ItemGroup>
     <None Include="cubemaps.frag" />
     <None Include="cubemaps.vert" />
+    <None Include="skybox.frag" />
+    <None Include="skybox.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

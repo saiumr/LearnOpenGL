@@ -14,6 +14,9 @@ public:
 	VAOType cubeVAO;
 	unsigned int cubeVBO;
 	unsigned int cubeEBO;
+	VAOType skyboxVAO;
+	unsigned int skyboxVBO;
+	unsigned int skyboxEBO;
 
 private:
 	void Init();

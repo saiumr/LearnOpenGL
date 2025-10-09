@@ -15,6 +15,7 @@ int  InitWindow();
 void RenderLoop();
 
 unsigned int LoadTexture(const char* file_path);
+unsigned int LoadCubemap(const std::vector<std::string>& faces);
 void ProcessInput(GLFWwindow* window);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
@@ -49,11 +50,26 @@ int main(int argc, const char** argv) {
 void RenderLoop() {
 	unsigned int cube_texture  { LoadTexture("marble.png") };
 
+	std::string base_dir { "skybox/default/" };
+	std::vector<std::string> faces {
+		base_dir + "right.jpg",
+		base_dir + "left.jpg",
+		base_dir + "top.jpg",
+		base_dir + "bottom.jpg",
+		base_dir + "front.jpg",
+		base_dir + "back.jpg"
+	};
+	unsigned int cubemap_texture { LoadCubemap(faces) };
+
 	Vertex vertex {};
 	Shader shader {"cubemaps.vert", "cubemaps.frag"};
+	Shader skybox_shader{ "skybox.vert", "skybox.frag" };
 
 	shader.use();
 	shader.setInt("texture0", 0);    // set GL_TEXTURE0 to texture0 firstly
+
+	skybox_shader.use();
+	skybox_shader.setInt("skybox", 0); // set GL_TEXTURE0 to skybox firstly
 
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
@@ -74,6 +90,7 @@ void RenderLoop() {
 		glm::mat4 projection { glm::perspective(glm::radians(camera.Zoom), (float)kScreenWidth / kScreenHeight, 0.1f, 100.0f) };
 
 		// cubes
+		glEnable(GL_CULL_FACE);
 		glBindVertexArray(vertex.cubeVAO);
 		glActiveTexture(GL_TEXTURE0);  // active GL_TEXTURE0 then bind texture
 		glBindTexture(GL_TEXTURE_2D, cube_texture);
@@ -81,6 +98,20 @@ void RenderLoop() {
 		shader.setMat4("view",  view);
 		shader.setMat4("projection", projection);
 		vertex.Draw(vertex.cubeVAO);
+		glDisable(GL_CULL_FACE);
+
+		// draw skybox as last
+		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+		skybox_shader.use();
+		view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+		skybox_shader.setMat4("view", view);
+		skybox_shader.setMat4("projection", projection);
+		// skybox cube
+		glBindVertexArray(vertex.skyboxVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
+		vertex.Draw(vertex.skyboxVAO);
+		glDepthFunc(GL_LESS); // set depth function back to default
 
 		glBindVertexArray(0);
 
@@ -154,6 +185,41 @@ unsigned int LoadTexture(const char* file_path) {
 		std::cout << "Texture failed to load at path: " << file_path << std::endl;
 		stbi_image_free(data);
 	}
+
+	return textureID;
+}
+
+// loads a cubemap texture from 6 individual texture faces
+// order:
+// +X (right)
+// -X (left)
+// +Y (top)
+// -Y (bottom)
+// +Z (front) 
+// -Z (back)
+// -------------------------------------------------------
+unsigned int LoadCubemap(const std::vector<std::string>& faces) {
+	unsigned int textureID;
+	glGenBuffers(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++) {
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data) {
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			stbi_image_free(data);
+		} else {
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	return textureID;
 }
