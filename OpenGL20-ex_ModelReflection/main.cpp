@@ -61,6 +61,8 @@ void RenderLoop() {
 
 	Shader shader("model_loading.vert", "model_loading.frag");
 	Model  model_obj("nanosuit_reflection/nanosuit.obj");
+	shader.use();
+	shader.setInt("skybox", 1); // set GL_TEXTURE1 to skybox
 
 	Vertex vertex{};
 	Shader skybox_shader{ "skybox.vert", "skybox.frag" };
@@ -91,9 +93,12 @@ void RenderLoop() {
 		shader.setMat4("view", view);
 
 		// render the loaded model
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::translate(model, glm::vec3(0.0f,-5.0f, 0.0f)); // translate it down so it's at the center of the scene
 		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));	// it's a bit too big for our scene, so scale it down
 		shader.setMat4("model", model);
+		shader.setVec3("cameraPos", camera.Position);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
 		model_obj.Draw(shader);
 
 		// draw skybox as last
@@ -228,7 +233,7 @@ void ProcessInput(GLFWwindow* window) {
 // -------------------------------------------------------
 unsigned int LoadCubemap(const std::vector<std::string>& faces) {
 	unsigned int textureID;
-	glGenBuffers(1, &textureID);
+	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
 	int width, height, nrChannels;
