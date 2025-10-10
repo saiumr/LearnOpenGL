@@ -95,6 +95,7 @@ void RenderLoop() {
 		glBindVertexArray(vertex.cubeVAO);
 		glActiveTexture(GL_TEXTURE0);  // active GL_TEXTURE0 then bind texture
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
+		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f), glm::vec3(1.0f, 0.3f, 0.5f));
 		shader.setMat4("model", model);
 		shader.setMat4("view",  view);
 		shader.setMat4("projection", projection);
@@ -202,7 +203,7 @@ unsigned int LoadTexture(const char* file_path) {
 // -------------------------------------------------------
 unsigned int LoadCubemap(const std::vector<std::string>& faces) {
 	unsigned int textureID;
-	glGenBuffers(1, &textureID);
+	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
 	int width, height, nrChannels;
