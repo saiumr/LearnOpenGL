@@ -66,7 +66,8 @@ void RenderLoop() {
 	Shader skybox_shader{ "skybox.vert", "skybox.frag" };
 
 	shader.use();
-	shader.setInt("texture0", 0);    // set GL_TEXTURE0 to texture0 firstly
+	//shader.setInt("texture0", 0);    // set GL_TEXTURE0 to texture0 firstly
+	shader.setInt("skybox", 0);     // set GL_TEXTURE0 to skybox
 
 	skybox_shader.use();
 	skybox_shader.setInt("skybox", 0); // set GL_TEXTURE0 to skybox firstly
@@ -93,10 +94,11 @@ void RenderLoop() {
 		glEnable(GL_CULL_FACE);
 		glBindVertexArray(vertex.cubeVAO);
 		glActiveTexture(GL_TEXTURE0);  // active GL_TEXTURE0 then bind texture
-		glBindTexture(GL_TEXTURE_2D, cube_texture);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
 		shader.setMat4("model", model);
 		shader.setMat4("view",  view);
 		shader.setMat4("projection", projection);
+		shader.setVec3("cameraPos", camera.Position);
 		vertex.Draw(vertex.cubeVAO);
 		glDisable(GL_CULL_FACE);
 

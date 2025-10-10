@@ -4,6 +4,7 @@
 float cube_vertices[] = {
 	// 确保从同一侧观察box时，相对的两个面，正面顶点顺序是逆时针，背面顶点顺序是顺时针即可
 	// 环绕观察定义顶点时，都按照逆时针顺序定义顶点
+	// eyes are around the box, staring straight at every face, inverse the vertex order of every face
     // position        // texture coord (S,T,[R])  // normal vector
     // bottom face (eyes around box)
     -0.5f,-0.5f,-0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, // bottom-left
@@ -72,6 +73,7 @@ unsigned int cube_indices[] = {
 
 float skybox_vertices[] = {
     // positions          
+	// eyes are in skybox, staring at every face, inverse the vertex order of each face
     -1.0f,  1.0f, -1.0f,
     -1.0f, -1.0f, -1.0f,
      1.0f, -1.0f, -1.0f,
@@ -157,8 +159,8 @@ void Vertex::Init() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void*)0);
 	glEnableVertexAttribArray(1);  // texture coord
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
-	//glEnableVertexAttribArray(2);  // normal vector
-    //glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(2);  // normal vector
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void*)(5 * sizeof(GL_FLOAT)));
     
 	// bind and set EBO
 	// EBO must bind after VAO bind
