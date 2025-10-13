@@ -137,6 +137,7 @@
     <None Include="advanced_glsl.vert" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="container.jpg" />
     <Image Include="floor.jpg" />
   </ItemGroup>
   <ItemGroup>

@@ -50,12 +50,14 @@ int main(int argc, const char** argv) {
 
 void RenderLoop() {
 	unsigned int cube_texture  { LoadTexture("floor.jpg") };
+	unsigned int cube_inner    { LoadTexture("container.jpg") };
 
 	Vertex vertex;
 	Shader shader {"advanced_glsl.vert", "advanced_glsl.frag"};
 
 	shader.use();
-	shader.setInt("texture0", 0);    // set GL_TEXTURE0 to texture0 firstly
+	shader.setInt("texture_outter", 0);    // set GL_TEXTURE0 to texture0 firstly
+	shader.setInt("texture_inner", 1);
 
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
@@ -81,6 +83,8 @@ void RenderLoop() {
 		glBindVertexArray(vertex.cubeVAO);
 		glActiveTexture(GL_TEXTURE0);  // active GL_TEXTURE0 then bind texture
 		glBindTexture(GL_TEXTURE_2D, cube_texture);
+		glActiveTexture(GL_TEXTURE1);  // active GL_TEXTURE0 then bind texture
+		glBindTexture(GL_TEXTURE_2D, cube_inner);
 		shader.setMat4("model", model);
 		vertex.Draw(vertex.cubeVAO);  // first cube
 
