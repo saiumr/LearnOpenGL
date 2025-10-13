@@ -51,3 +51,31 @@ glm::mat4 mat = glm::mat4(1.0f);
 reference:  
 [Advanced GLSL-CN](https://learnopengl-cn.github.io/04%20Advanced%20OpenGL/08%20Advanced%20GLSL/)  
 [Advanced GLSL-EN(origin)](https://learnopengl.com/Advanced-OpenGL/Advanced-GLSL)
+
+### Uniform Buffer Object (UBO)
+
+```c++
+layout (std140) uniform ExampleBlock
+{
+                     // 基准对齐量       // 对齐偏移量
+    float value;     // 4               // 0 
+    vec3 vector;     // 16              // 16  (必须是16的倍数，所以 4->16)
+    mat4 matrix;     // 16              // 32  (列 0)
+                     // 16              // 48  (列 1)
+                     // 16              // 64  (列 2)
+                     // 16              // 80  (列 3)
+    float values[3]; // 16              // 96  (values[0])
+                     // 16              // 112 (values[1])
+                     // 16              // 128 (values[2])
+    bool boolean;    // 4               // 144
+    int integer;     // 4               // 148
+}; 
+```
+
+对齐偏移量是基准对齐量的整数倍，是变量的起始位置，在std140布局中递增。  
+
+只要记住整数倍，递增，和基准对齐量这三点，就能计算出每个变量位置和接口块总大小，上面的示例接口块总大小为152字节（148+4）。
+
+使用方式参考篇章图解：[使用Uniform缓冲](https://learnopengl-cn.github.io/04%20Advanced%20OpenGL/08%20Advanced%20GLSL/#uniform_2)
+
+大体流程是绑定shader uniform block和UBO到同一个绑定点，然后将数据拷贝到（设置到）UBO中。
