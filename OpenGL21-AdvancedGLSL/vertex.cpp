@@ -178,7 +178,7 @@ void Vertex::Init() {
 
 void Vertex::Draw(VAOType VAO) {
     if (VAO == cubeVAO) {
-        glDrawElements(GL_POINTS, sizeof(cube_indices)/sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, sizeof(cube_indices)/sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     } else if (VAO == planeVAO) {
         glDrawElements(GL_TRIANGLES, sizeof(plane_indices)/sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     } else if (VAO == vegatationVAO) {

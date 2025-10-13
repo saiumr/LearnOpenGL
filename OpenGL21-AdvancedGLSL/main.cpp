@@ -119,7 +119,7 @@ int InitWindow() {
 
 	glEnable(GL_DEPTH_TEST);
 	// enable following line to allow us to modify point size by set gl_PointSize in vertex shader
-	glEnable(GL_PROGRAM_POINT_SIZE);
+	//glEnable(GL_PROGRAM_POINT_SIZE);
 
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 	glfwSetCursorPosCallback(window, MouseCallback);

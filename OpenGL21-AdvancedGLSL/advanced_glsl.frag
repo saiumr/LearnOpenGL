@@ -7,4 +7,11 @@ uniform sampler2D texture0;
 void main()
 {             
     FragColor = texture(texture0, TexCoords);
+
+    // set contrast special effect
+    if (gl_FragCoord.x < 400) {
+        FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    } else {
+        FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+    }
 }

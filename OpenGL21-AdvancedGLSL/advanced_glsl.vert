@@ -12,5 +12,5 @@ void main()
 {
     TexCoords = aTexCoords;    
     gl_Position = projection * view * model * vec4(aPos, 1.0);
-    gl_PointSize = gl_Position.z;  // Set point size based on depth
+    //gl_PointSize = gl_Position.z;  // Set point size based on depth
 }
