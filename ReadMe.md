@@ -45,3 +45,9 @@ glm::mat4 mat = glm::mat4(1.0f);
 也许你需要自行编译库文件：[assimp](https://github.com/assimp/assimp/blob/master/Build.md)
 
 添加.lib链接库，然后将动态库`assimp-vc142-mt.dll`添加到vs的资源文件目录下，就不用手动拷贝到可执行文件的目录了。  
+
+### OpenGL Build-in variables
+
+reference:  
+[Advanced GLSL-CN](https://learnopengl-cn.github.io/04%20Advanced%20OpenGL/08%20Advanced%20GLSL/)  
+[Advanced GLSL-EN(origin)](https://learnopengl.com/Advanced-OpenGL/Advanced-GLSL)
