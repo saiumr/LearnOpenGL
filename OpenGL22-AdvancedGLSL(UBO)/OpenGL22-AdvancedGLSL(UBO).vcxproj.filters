@@ -15,8 +15,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="advanced_glsl_ubo.frag" />
-    <None Include="advanced_glsl_ubo.vert" />
+    <None Include="advanced_glsl.vert" />
+    <None Include="red.frag" />
+    <None Include="blue.frag" />
+    <None Include="green.frag" />
+    <None Include="yellow.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">

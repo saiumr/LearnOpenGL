@@ -50,7 +50,44 @@ int main(int argc, const char** argv) {
 
 void RenderLoop() {
 	Vertex vertex;
-	Shader shader {"advanced_glsl_ubo.vert", "advanced_glsl_ubo.frag"};
+	Shader shader_red    { "advanced_glsl.vert", "red.frag"    };
+	Shader shader_green  { "advanced_glsl.vert", "green.frag"  };
+	Shader shader_blue   { "advanced_glsl.vert", "blue.frag"   };
+	Shader shader_yellow { "advanced_glsl.vert", "yellow.frag" };
+
+	// uniform has max size, we can check it by GL_MAX_VERTEX_UNIFORM_COMPONENTS
+	// so use uniform buffer object(UBO) to store uniforms we can use store uniforms
+	// we can always use UBO when making bones animation
+	std::cout << "max uniform: " << GL_MAX_VERTEX_UNIFORM_COMPONENTS << std::endl;
+
+	// first. we get the uniform block index
+	unsigned int uniform_block_index_red = glGetUniformBlockIndex(shader_red.ID, "Matrices");
+	unsigned int uniform_block_index_green = glGetUniformBlockIndex(shader_green.ID, "Matrices");
+	unsigned int uniform_block_index_blue = glGetUniformBlockIndex(shader_blue.ID, "Matrices");
+	unsigned int uniform_block_index_yellow = glGetUniformBlockIndex(shader_yellow.ID, "Matrices");
+
+	// then we link each shader's uniform block to this uniform binding point
+	glUniformBlockBinding(shader_red.ID, uniform_block_index_red, 0);
+	glUniformBlockBinding(shader_green.ID, uniform_block_index_green, 0);
+	glUniformBlockBinding(shader_blue.ID, uniform_block_index_blue, 0);
+	glUniformBlockBinding(shader_yellow.ID, uniform_block_index_yellow, 0);
+
+	// Now actually create the buffer
+	unsigned int ubo_matrices;
+	glGenBuffers(1, &ubo_matrices);
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW); // allocate 2 mat4s
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	// define the range of the buffer that links to a uniform binding point
+	// bind 0~2*sizeof(mat4) bytes of ubo_matrices to binding point 0
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo_matrices, 0, 2 * sizeof(glm::mat4)); // we bind the buffer to the binding point 0
+
+	// store the projection matrix (we only have to do this once)(note: we're not using zoom anymore by changing the FoV)
+	glm::mat4 projection = glm::perspective(45.0f, (float)kScreenWidth / kScreenHeight, 0.1f, 100.0f);
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection)); // note that we use glBufferSubData, not glBufferData
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
@@ -62,20 +99,38 @@ void RenderLoop() {
 		glClearColor(0.15f, 0.16f, 0.18f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// object
-		shader.use();
+		// set view and projection matrix in the block - we only have to do this once per loop iteration.
+		glm::mat4 view { camera.GetViewMatrix() };
+		glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view)); // note that we use glBufferSubData, not glBufferData
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		glm::mat4 model      { 1.0f };
-		glm::mat4 view       { camera.GetViewMatrix() };
-		glm::mat4 projection { glm::perspective(glm::radians(camera.Zoom), (float)kScreenWidth / kScreenHeight, 0.1f, 100.0f) };
-		shader.setMat4("model", model);
-		shader.setMat4("view", view);
-		shader.setMat4("projection", projection);
-
-		// cube
+		// draw 4 cubes 
+		// RED
 		glBindVertexArray(vertex.cubeVAO);
-		shader.setMat4("model", model);
-		vertex.Draw(vertex.cubeVAO);  // first cube
+		shader_red.use();
+		glm::mat4 model { glm::mat4(1.0f) };
+		model = glm::translate(model, glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+		shader_red.setMat4("model", model);
+		vertex.Draw(vertex.cubeVAO);
+		// GREEN
+		shader_green.use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.75f, 0.75f, 0.0f)); // move top-right
+		shader_green.setMat4("model", model);
+		vertex.Draw(vertex.cubeVAO);
+		// YELLOW
+		shader_yellow.use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-0.75f, -0.75f, 0.0f)); // move bottom-left
+		shader_yellow.setMat4("model", model);
+		vertex.Draw(vertex.cubeVAO);
+		// BLUE
+		shader_blue.use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.75f, -0.75f, 0.0f)); // move bottom-right
+		shader_blue.setMat4("model", model);
+		vertex.Draw(vertex.cubeVAO);
 
 		glBindVertexArray(0);
 
@@ -83,7 +138,10 @@ void RenderLoop() {
 		glfwPollEvents();
 	}
 
-	shader.Clean();
+	shader_red.Clean();
+	shader_green.Clean();
+	shader_blue.Clean();
+	shader_yellow.Clean();
 	vertex.Clean();
 }
 
