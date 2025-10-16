@@ -20,6 +20,9 @@ public:
 	VAOType vegatationVAO;
 	unsigned int vegatationVBO;
 	unsigned int vegatationEBO;
+	VAOType pointVAO;
+	unsigned int pointVBO;
+	unsigned int pointEBO;
 
 private:
 	void Init();

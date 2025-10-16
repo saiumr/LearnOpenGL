@@ -1,13 +1,16 @@
 #include "shader.h"
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath) {
+Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath) {
 	std::string vertexCode;
 	std::string fragmentCode;
+	std::string geometryCode;
 	std::ifstream vShaderFile;
 	std::ifstream fShaderFile;
+	std::ifstream gShaderFile;
 
 	vShaderFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
 	fShaderFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+	gShaderFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
 
 	try {
 		vShaderFile.open(vertexPath);
@@ -21,6 +24,14 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 
 		vertexCode = vShaderStream.str();
 		fragmentCode = fShaderStream.str();
+
+		if (geometryPath) {
+			gShaderFile.open(geometryPath);
+			std::stringstream gShaderStream;
+			gShaderStream << gShaderFile.rdbuf();
+			gShaderFile.close();
+			geometryCode = gShaderStream.str();
+		}
 	}
 	catch (std::ifstream::failure e) {
 		std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
@@ -30,9 +41,13 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 	const char* vShaderCode = vertexCode.c_str();
 	const char* fShaderCode = fragmentCode.c_str();
 
-	// Compile shaders
+	// Compile shaders - fill shaders_ vector
 	compileShader_(vShaderCode, GL_VERTEX_SHADER);
 	compileShader_(fShaderCode, GL_FRAGMENT_SHADER);
+	if (geometryPath) {
+		const char* gShaderCode = geometryCode.c_str();
+		compileShader_(gShaderCode, GL_GEOMETRY_SHADER);
+	}
 	// Link shaders (Create shader program)
 	linkShader_(shaders_);
 	// Delete shaders
@@ -93,6 +108,10 @@ void Shader::compileShader_(const char* shaderCode, GLenum shaderType) {
 
 		case GL_FRAGMENT_SHADER:
 			std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+			break;
+
+		case GL_GEOMETRY_SHADER:
+			std::cout << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << std::endl;
 			break;
 		}
 	}

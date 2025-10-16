@@ -50,7 +50,7 @@ int main(int argc, const char** argv) {
 
 void RenderLoop() {
 	Vertex vertex;
-	Shader shader("shader.vert", "shader.frag");
+	Shader shader("geometry_shader.vert", "geometry_shader.frag", "geometry_shader.geom");
 	shader.use();
 
 	while (!glfwWindowShouldClose(window)) {
@@ -70,8 +70,8 @@ void RenderLoop() {
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
 
-		glBindVertexArray(vertex.cubeVAO);
-		vertex.Draw(vertex.cubeVAO);
+		glBindVertexArray(vertex.pointVAO);
+		vertex.Draw(vertex.pointVAO);
 		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);

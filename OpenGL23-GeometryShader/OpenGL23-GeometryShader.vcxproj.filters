@@ -37,7 +37,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shader.vert" />
-    <None Include="shader.frag" />
+    <None Include="geometry_shader.vert" />
+    <None Include="geometry_shader.frag" />
+    <None Include="geometry_shader.geom" />
   </ItemGroup>
 </Project>

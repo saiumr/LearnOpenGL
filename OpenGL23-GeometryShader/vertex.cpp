@@ -102,6 +102,19 @@ unsigned int vegatation_indices[] = {
     3, 4, 5
 };
 
+float points_indices[] = {
+	// x,y        // r,g,b
+    -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
+     0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // top-right
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
+    -0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
+};
+
+unsigned int points_vertices[] = {
+    0, 1, 2,
+    2, 3, 0
+};
+
 Vertex::Vertex() {
     Init();
 }
@@ -116,6 +129,9 @@ void Vertex::Clean() const {
 	glDeleteVertexArrays(1, &planeVAO);
     glDeleteBuffers(1, &planeVBO);
     glDeleteBuffers(1, &planeEBO);
+	glDeleteVertexArrays(1, &pointVAO);
+    glDeleteBuffers(1, &pointVBO);
+	glDeleteBuffers(1, &pointEBO);
 }
 
 void Vertex::Init() {
@@ -129,6 +145,9 @@ void Vertex::Init() {
     glGenVertexArrays(1, &vegatationVAO);
     glGenBuffers(1, &vegatationVBO);
     glGenBuffers(1, &vegatationEBO);
+	glGenVertexArrays(1, &pointVAO);
+    glGenBuffers(1, &pointVBO);
+	glGenBuffers(1, &pointEBO);
 
 	// bind first VAO
     glBindVertexArray(cubeVAO);
@@ -174,6 +193,18 @@ void Vertex::Init() {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vegatationEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vegatation_indices), vegatation_indices, GL_STATIC_DRAW);
 
+	// point VAO
+	glBindVertexArray(pointVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points_indices), points_indices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);  // position
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (void*)0);
+	glEnableVertexAttribArray(1);  // r,g,b
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (void*)(2 * sizeof(GL_FLOAT)));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pointEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(points_vertices), points_vertices, GL_STATIC_DRAW);
+
+	// unbind VAO VBO EBO
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);  // EBO must unbind after VAO unbind
@@ -186,5 +217,7 @@ void Vertex::Draw(VAOType VAO) {
         glDrawElements(GL_TRIANGLES, sizeof(plane_indices)/sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     } else if (VAO == vegatationVAO) {
 		glDrawElements(GL_TRIANGLES, sizeof(vegatation_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+	} else if (VAO == pointVAO) {
+        glDrawElements(GL_POINTS, sizeof(points_vertices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     }
 }
