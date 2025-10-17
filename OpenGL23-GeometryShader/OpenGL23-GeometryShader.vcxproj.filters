@@ -24,6 +24,12 @@
     <ClInclude Include="vertex.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="mesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="model.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -35,10 +41,17 @@
     <ClCompile Include="vertex.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="mesh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="model.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="geometry_shader.vert" />
     <None Include="geometry_shader.frag" />
     <None Include="geometry_shader.geom" />
+    <None Include="assimp-vc143-mt.dll" />
   </ItemGroup>
 </Project>

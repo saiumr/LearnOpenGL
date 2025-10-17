@@ -9,8 +9,7 @@
 #include "vertex.h"
 #include "shader.h"
 #include "camera.h"
-
-#define STB_IMAGE_IMPLEMENTATION
+#include "model.h"
 #include "stb_image.h"
 
 int  InitWindow();
@@ -53,6 +52,8 @@ void RenderLoop() {
 	Shader shader("geometry_shader.vert", "geometry_shader.frag", "geometry_shader.geom");
 	shader.use();
 
+	Model model_obj { "backpack/backpack.obj" };
+
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
 		delta_time = current_frame - last_frame;
@@ -65,21 +66,19 @@ void RenderLoop() {
 
 		glm::mat4 model{ 1.0f };
 		glm::mat4 view{ camera.GetViewMatrix() };
-		glm::mat4 projection{ glm::perspective(glm::radians(camera.Zoom), static_cast<float>(kScreenWidth) / static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
+		glm::mat4 projection{ glm::perspective(glm::radians(45.0f), static_cast<float>(kScreenWidth) / static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
 
-		glBindVertexArray(vertex.pointVAO);
-		vertex.Draw(vertex.pointVAO);
-		glBindVertexArray(0);
+		shader.setFloat("time", static_cast<float>(glfwGetTime()));
+		model_obj.Draw(shader);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
 	shader.Clean();
-	vertex.Clean();
 }
 
 
