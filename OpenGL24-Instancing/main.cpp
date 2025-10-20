@@ -6,10 +6,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 #include <map>
+#include <memory>
 #include "vertex.h"
 #include "shader.h"
 #include "camera.h"
-#define STB_IMAGE_IMPLEMENTATION
+#include "model.h"
 #include "stb_image.h"
 
 int  InitWindow();
@@ -25,7 +26,7 @@ GLFWwindow* window { nullptr };
 const int kScreenWidth  { 800 };
 const int kScreenHeight { 600 };
 
-Camera camera { glm::vec3 {0.0f, 1.0f, 3.0f} };
+Camera camera { glm::vec3 {5.0f, 5.0f, 45.0f} };
 bool  first_mouse { true };
 float last_x { static_cast<float>(kScreenWidth) / 2.0f };
 float last_y { static_cast<float>(kScreenHeight) / 2.0f };
@@ -48,36 +49,38 @@ int main(int argc, const char** argv) {
 
 
 void RenderLoop() {
-	Vertex vertex;
-	Shader shader("default.vert", "default.frag");
+	Shader planet_shader("planet.vert", "planet.frag");
+	Model rock   { "rock/rock.obj" };
+	Model planet { "planet/planet.obj" };
 
-	glm::vec2 translations[100];
-	int index = 0;
-	float offset = 0.1f;
-	for (int y = -10; y < 10; y += 2)
-	{
-		for (int x = -10; x < 10; x += 2)
-		{
-			glm::vec2 translation;
-			translation.x = static_cast<float>(x) / 10.0f + offset;
-			translation.y = static_cast<float>(y) / 10.0f + offset;
-			translations[index++] = translation;
-		}
+	unsigned int amount = 1000;
+	std::unique_ptr<glm::mat4[]> modelMatrices { std::make_unique<glm::mat4[]>(amount) };
+	srand(static_cast<unsigned int>(glfwGetTime())); // initialize random seed
+	float radius = 50.0;
+	float offset = 2.5f;
+	for (unsigned int i = 0; i < amount; i++) {
+		glm::mat4 model = glm::mat4(1.0f);
+		// 1. translation: displace along circle with 'radius' in range [-offset, offset]
+		float angle = (float)i / (float)amount * 360.0f;
+		float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float x = sin(angle) * radius + displacement;
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float y = displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float z = cos(angle) * radius + displacement;
+		model = glm::translate(model, glm::vec3(x, y, z));
+
+		// 2. scale: Scale between 0.05 and 0.25f
+		float scale = static_cast<float>((rand() % 20) / 100.0 + 0.05);
+		model = glm::scale(model, glm::vec3(scale));
+
+		// 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+		float rotAngle = static_cast<float>((rand() % 360));
+		model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+		// 4. now add to list of matrices
+		modelMatrices[i] = model;
 	}
-
-	unsigned int instanceVBO;
-	glGenBuffers(1, &instanceVBO);
-	glBindVertexArray(vertex.rectVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &translations[0], GL_STATIC_DRAW);
-
-	// set instance data
-	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-	glVertexAttribDivisor(2, 1); // location 2 and update per 1 instance 顶点配置属性需要有绑定VAO时进行
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
@@ -92,19 +95,26 @@ void RenderLoop() {
 		glm::mat4 model{ 1.0f };
 		glm::mat4 view{ camera.GetViewMatrix() };
 		glm::mat4 projection{ glm::perspective(glm::radians(45.0f), static_cast<float>(kScreenWidth) / static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
-		shader.use();
-		shader.setMat4("model", model);
-		shader.setMat4("view", view);
-		shader.setMat4("projection", projection);
-		glBindVertexArray(vertex.rectVAO);
-		vertex.Draw(vertex.rectVAO);
-		glBindVertexArray(0);
+
+		planet_shader.use();
+		model = glm::mat4 { 1.0f };
+		model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+		planet_shader.setMat4("model", model);
+		planet_shader.setMat4("view", view);
+		planet_shader.setMat4("projection", projection);
+		planet.Draw(planet_shader);
+
+		for (unsigned int i = 0; i < amount; i++) {
+			planet_shader.setMat4("model", modelMatrices[i]);
+			rock.Draw(planet_shader);
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	shader.Clean();
+	planet_shader.Clean();
 }
 
 
@@ -195,6 +205,10 @@ void ProcessInput(GLFWwindow* window) {
 		camera.ProcessKeyboard(kUpward, delta_time);
 	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
 		camera.ProcessKeyboard(kDownward, delta_time);
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+		std::cout << "camera pos: { "
+		<<  camera.Position.x << ", " << camera.Position.y << "," << camera.Position.z << " }"
+		<< std::endl;
 }
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
