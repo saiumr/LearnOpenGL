@@ -136,6 +136,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="assimp-vc143-mt.dll" />
+    <None Include="rock.frag" />
+    <None Include="rock.vert" />
     <None Include="planet.frag" />
     <None Include="planet.vert" />
   </ItemGroup>

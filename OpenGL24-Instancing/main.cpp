@@ -50,6 +50,7 @@ int main(int argc, const char** argv) {
 
 void RenderLoop() {
 	Shader planet_shader("planet.vert", "planet.frag");
+	Shader rock_shader("rock.vert", "rock.frag");
 	Model rock   { "rock/rock.obj" };
 	Model planet { "planet/planet.obj" };
 
@@ -82,6 +83,38 @@ void RenderLoop() {
 		modelMatrices[i] = model;
 	}
 
+	// use instanced array to send transformation matrices to the GPU
+	unsigned int buffer;
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+
+	for (unsigned int i = 0; i < rock.meshes.size(); i++)
+	{
+		unsigned int VAO = rock.meshes[i].get_VAO();
+		glBindVertexArray(VAO);
+		// opengl's mat4 is 4 vec4's
+		// opengl顶点属性最大允许的数据大小等于一个vec4
+		// opengl允许我们将一个mat4作为4个vec4属性来设置，每个vec4占用一个顶点属性位置
+		GLsizei vec4Size = sizeof(glm::vec4);
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)0);
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(1 * vec4Size));
+		glEnableVertexAttribArray(5);
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(2 * vec4Size));
+		glEnableVertexAttribArray(6);
+		glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
+
+		glVertexAttribDivisor(3, 1);
+		glVertexAttribDivisor(4, 1);
+		glVertexAttribDivisor(5, 1);
+		glVertexAttribDivisor(6, 1);
+
+		glBindVertexArray(0);
+	}
+
+
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
 		delta_time = current_frame - last_frame;
@@ -105,10 +138,17 @@ void RenderLoop() {
 		planet_shader.setMat4("projection", projection);
 		planet.Draw(planet_shader);
 
-		for (unsigned int i = 0; i < amount; i++) {
-			planet_shader.setMat4("model", modelMatrices[i]);
-			rock.Draw(planet_shader);
+		rock_shader.use();
+		rock_shader.setMat4("view", view);
+		rock_shader.setMat4("projection", projection);
+		for (unsigned int i = 0; i < rock.meshes.size(); i++)
+		{
+			glBindVertexArray(rock.meshes[i].get_VAO());
+			glDrawElementsInstanced(
+				GL_TRIANGLES, rock.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, amount
+			);
 		}
+		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

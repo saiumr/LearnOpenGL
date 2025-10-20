@@ -36,6 +36,7 @@ namespace mesh {
 		// functions
 		Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
 		void Draw(Shader& shader);
+		inline unsigned int get_VAO() const { return VAO_; }
 
 	private:
 		// render data

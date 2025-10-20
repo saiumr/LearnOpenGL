@@ -35,6 +35,8 @@
     <None Include="planet.vert" />
     <None Include="planet.frag" />
     <None Include="assimp-vc143-mt.dll" />
+    <None Include="rock.vert" />
+    <None Include="rock.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
