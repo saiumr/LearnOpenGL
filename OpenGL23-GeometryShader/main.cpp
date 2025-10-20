@@ -50,7 +50,8 @@ int main(int argc, const char** argv) {
 void RenderLoop() {
 	Vertex vertex;
 	Shader shader("geometry_shader.vert", "geometry_shader.frag", "geometry_shader.geom");
-	shader.use();
+	Shader shader_default("default.vert", "default.frag");
+	Shader shader_normal("normal_visual.vert", "normal_visual.frag", "normal_visual.geom");
 
 	Model model_obj { "backpack/backpack.obj" };
 
@@ -67,12 +68,25 @@ void RenderLoop() {
 		glm::mat4 model{ 1.0f };
 		glm::mat4 view{ camera.GetViewMatrix() };
 		glm::mat4 projection{ glm::perspective(glm::radians(45.0f), static_cast<float>(kScreenWidth) / static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
+		shader.use();
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
 
 		shader.setFloat("time", static_cast<float>(glfwGetTime()));
 		model_obj.Draw(shader);
+
+		model = glm::translate(model, glm::vec3(5.0f, 0.0f, 0.0f));
+		shader_default.use();
+		shader_default.setMat4("model", model);
+		shader_default.setMat4("view", view);
+		shader_default.setMat4("projection", projection);
+		model_obj.Draw(shader_default);
+		shader_normal.use();
+		shader_normal.setMat4("model", model);
+		shader_normal.setMat4("view", view);
+		shader_normal.setMat4("projection", projection);
+		model_obj.Draw(shader_normal);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

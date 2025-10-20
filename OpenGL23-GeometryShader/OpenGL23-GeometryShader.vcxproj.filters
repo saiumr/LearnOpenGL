@@ -53,5 +53,10 @@
     <None Include="geometry_shader.frag" />
     <None Include="geometry_shader.geom" />
     <None Include="assimp-vc143-mt.dll" />
+    <None Include="normal_visual.vert" />
+    <None Include="normal_visual.frag" />
+    <None Include="normal_visual.geom" />
+    <None Include="default.vert" />
+    <None Include="default.frag" />
   </ItemGroup>
 </Project>
