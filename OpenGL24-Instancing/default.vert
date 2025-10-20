@@ -8,8 +8,11 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
+uniform vec2 offsets[100];
+
 void main()
 {
-    gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0);
+    vec2 offset = offsets[gl_InstanceID];
+    gl_Position = projection * view * model * vec4(aPos + offset, 0.0, 1.0);
     fColor = aColor;
 }

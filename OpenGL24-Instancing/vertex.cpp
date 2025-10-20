@@ -117,10 +117,10 @@ unsigned int points_indices[] = {
 
 float rect_vertices[] = {
     // x,y        // r,g,b
-   -0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
-   -0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-    0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
-    0.5f,  0.5f, 1.0f, 1.0f, 0.0f
+   -0.05f,  0.05f, 1.0f, 0.0f, 0.0f,
+   -0.05f, -0.05f, 0.0f, 1.0f, 0.0f,
+    0.05f, -0.05f, 0.0f, 0.0f, 1.0f,
+    0.05f,  0.05f, 1.0f, 1.0f, 0.0f
 };
 
 unsigned int rect_indices[] = {
@@ -250,6 +250,7 @@ void Vertex::Draw(VAOType VAO) {
 	} else if (VAO == pointVAO) {
         glDrawElements(GL_POINTS, sizeof(points_vertices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     } else if (VAO == rectVAO) {
-        glDrawElements(GL_TRIANGLES, sizeof(rect_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+		// 100 instances
+		glDrawElementsInstanced(GL_TRIANGLES, sizeof(rect_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0, 100);
     }
 }

@@ -51,6 +51,26 @@ void RenderLoop() {
 	Vertex vertex;
 	Shader shader("default.vert", "default.frag");
 
+	glm::vec2 translations[100];
+	int index = 0;
+	float offset = 0.1f;
+	for (int y = -10; y < 10; y += 2)
+	{
+		for (int x = -10; x < 10; x += 2)
+		{
+			glm::vec2 translation;
+			translation.x = static_cast<float>(x) / 10.0f + offset;
+			translation.y = static_cast<float>(y) / 10.0f + offset;
+			translations[index++] = translation;
+		}
+	}
+
+	shader.use();
+	for (unsigned int i = 0; i < 100; i++)
+	{
+		shader.setVec2(("offsets[" + std::to_string(i) + "]"), translations[i]);
+	}
+
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
 		delta_time = current_frame - last_frame;
