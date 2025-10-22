@@ -138,6 +138,8 @@
     <ClCompile Include="vertex.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="aa_post.frag" />
+    <None Include="aa_post.vert" />
     <None Include="anti_aliasing.frag" />
     <None Include="anti_aliasing.vert" />
   </ItemGroup>

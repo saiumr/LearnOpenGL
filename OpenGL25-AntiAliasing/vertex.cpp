@@ -128,6 +128,19 @@ unsigned int rect_indices[] = {
     2, 3, 0
 };
 
+float quad_vertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+    // positions        // texCoords
+    -1.0f,  1.0f, 0.0f, 1.0f,
+    -1.0f, -1.0f, 0.0f, 0.0f,
+     1.0f, -1.0f, 1.0f, 0.0f,
+     1.0f,  1.0f, 1.0f, 1.0f
+};
+
+unsigned int quad_indices[] = {
+    0, 1, 2,
+    2, 3, 0
+};
+
 Vertex::Vertex() {
     Init();
 }
@@ -148,6 +161,9 @@ void Vertex::Clean() const {
 	glDeleteVertexArrays(1, &rectVAO);
     glDeleteBuffers(1, &rectVBO);
 	glDeleteBuffers(1, &rectEBO);
+    glDeleteVertexArrays(1, &quadVAO);
+    glDeleteBuffers(1, &quadVBO);
+    glDeleteBuffers(1, &quadEBO);
 }
 
 void Vertex::Init() {
@@ -167,6 +183,9 @@ void Vertex::Init() {
 	glGenVertexArrays(1, &rectVAO);
 	glGenBuffers(1, &rectVBO);
 	glGenBuffers(1, &rectEBO);
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+	glGenBuffers(1, &quadEBO);
 
 	// bind first VAO
     glBindVertexArray(cubeVAO);
@@ -234,6 +253,17 @@ void Vertex::Init() {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rectEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rect_indices), rect_indices, GL_STATIC_DRAW);
 
+	// quad VAO
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);  // position
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GL_FLOAT), (void*)0);
+    glEnableVertexAttribArray(1);  // texture coord
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GL_FLOAT), (void*)(2 * sizeof(GL_FLOAT)));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quad_indices), quad_indices, GL_STATIC_DRAW);
+
 	// unbind VAO VBO EBO
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -252,5 +282,7 @@ void Vertex::Draw(VAOType VAO) {
     } else if (VAO == rectVAO) {
 		// 100 instances
 		glDrawElementsInstanced(GL_TRIANGLES, sizeof(rect_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0, 100);
+    } else if (VAO == quadVAO) {
+        glDrawElements(GL_TRIANGLES, sizeof(quad_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
     }
 }

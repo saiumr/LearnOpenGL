@@ -27,6 +27,9 @@ public:
 	VAOType rectVAO;
 	unsigned int rectVBO;
 	unsigned int rectEBO;
+	VAOType quadVAO;
+	unsigned int quadVBO;
+	unsigned int quadEBO;
 
 private:
 	void Init();

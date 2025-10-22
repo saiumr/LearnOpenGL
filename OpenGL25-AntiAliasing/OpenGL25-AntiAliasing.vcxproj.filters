@@ -39,5 +39,7 @@
   <ItemGroup>
     <None Include="anti_aliasing.vert" />
     <None Include="anti_aliasing.frag" />
+    <None Include="aa_post.vert" />
+    <None Include="aa_post.frag" />
   </ItemGroup>
 </Project>

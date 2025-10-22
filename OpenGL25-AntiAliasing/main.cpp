@@ -52,6 +52,54 @@ int main(int argc, const char** argv) {
 void RenderLoop() {
 	Vertex vertex;
 	Shader shader { "anti_aliasing.vert", "anti_aliasing.frag" };
+	Shader screen_shader { "aa_post.vert", "aa_post.frag" };
+
+	// off-screen MSAA like OpenGL18-FrameBuffers(off-screen render)
+	// 1.create framebuffer
+	unsigned int framebuffer;
+	glGenFramebuffers(1, &framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+	// 2.create a multisampled color attachment texture
+	unsigned int textureColorBufferMultiSampled;
+	glGenTextures(1, &textureColorBufferMultiSampled);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, kScreenWidth, kScreenHeight, GL_TRUE);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled, 0);
+	// 3.create a (also multisampled) renderbuffer object for depth and stencil attachments
+	unsigned int rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, kScreenWidth, kScreenHeight);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+	// 4.check framebuffer complete and unbind
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// 如果需要做后期处理，还需要一个普通的帧缓冲对象来作为第二个渲染目标
+	// configure second post-processing framebuffer
+	unsigned int intermediateFBO;
+	glGenFramebuffers(1, &intermediateFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, intermediateFBO);
+	// create a color attachment texture
+	unsigned int screenTexture;
+	glGenTextures(1, &screenTexture);
+	glBindTexture(GL_TEXTURE_2D, screenTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, kScreenWidth, kScreenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// we only need a color buffer as a texture
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTexture, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	screen_shader.use();
+	screen_shader.setInt("screenTexture", 0);
 
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
@@ -63,6 +111,12 @@ void RenderLoop() {
 		glClearColor(0.15f, 0.16f, 0.18f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// 1. draw scene as normal in multisampled buffers
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		glClearColor(0.15f, 0.16f, 0.18f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+
 		glm::mat4 model{ 1.0f };
 		glm::mat4 view{ camera.GetViewMatrix() };
 		glm::mat4 projection{ glm::perspective(glm::radians(45.0f), static_cast<float>(kScreenWidth) / static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
@@ -73,6 +127,26 @@ void RenderLoop() {
 
 		glBindVertexArray(vertex.cubeVAO);
 		vertex.Draw(vertex.cubeVAO);
+
+		// 2. now blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
+		// blit to normal framebuffer so that we can post-process it by shader
+		glBlitFramebuffer(0, 0, kScreenWidth, kScreenHeight, 0, 0, kScreenWidth, kScreenHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		// 3. now render quad with scene's visuals as its texture image
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClearColor(0.15f, 0.16f, 0.18f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+
+		// draw screen quad
+		screen_shader.use();
+		glBindVertexArray(vertex.quadVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, screenTexture); // use the now resolved color attachment as the quad's texture
+		vertex.Draw(vertex.quadVAO);
+
 		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);
@@ -109,7 +183,7 @@ int InitWindow() {
 	// enable following line to allow us to modify point size by set gl_PointSize in vertex shader
 	//glEnable(GL_PROGRAM_POINT_SIZE);
 
-	glEnable(GL_MULTISAMPLE); // enabled by default on some drivers, but not all so always enable to make sure
+	// glEnable(GL_MULTISAMPLE); // enabled by default on some drivers, but not all so always enable to make sure
 
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 	glfwSetCursorPosCallback(window, MouseCallback);
