@@ -124,6 +124,7 @@ int InitWindow() {
 	//glEnable(GL_PROGRAM_POINT_SIZE);
 
 	// glEnable(GL_MULTISAMPLE); // enabled by default on some drivers, but not all so always enable to make sure
+	glEnable(GL_FRAMEBUFFER_SRGB);
 
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 	glfwSetCursorPosCallback(window, MouseCallback);
