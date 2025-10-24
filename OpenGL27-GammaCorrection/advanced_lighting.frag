@@ -19,9 +19,9 @@ void main()
     float gamma = 2.2;
     vec3 color = texture(floor_texture, fs_in.TexCoords).rgb;
     // gamma decode diffuse texture
-    if (enable_gamma) {
-        color.rgb = pow(color.rgb, vec3(gamma));
-    }
+    //if (enable_gamma) {
+    //    color.rgb = pow(color.rgb, vec3(gamma));
+    //}
     // ambient
     vec3 ambient = 0.05 * color;
     // diffuse

@@ -17,7 +17,7 @@
 int  InitWindow();
 void RenderLoop();
 
-unsigned int LoadTexture(const char* file_path);
+unsigned int LoadTexture(const char* file_path, bool gamma_correction);
 void ProcessInput(GLFWwindow* window);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
@@ -57,7 +57,7 @@ int main(int argc, const char** argv) {
 
 void RenderLoop() {
 	Vertex vertex;
-	unsigned int floor_texture { LoadTexture("wood.jpg") };
+	unsigned int floor_texture { LoadTexture("wood.jpg", true) };
 	Shader shader { "advanced_lighting.vert", "advanced_lighting.frag" };
 	Shader light_shader { "light_cube.vert", "light_cube.frag" };
 
@@ -154,23 +154,28 @@ int InitWindow() {
 	return 0;
 }
 
-unsigned int LoadTexture(const char* file_path) {
+unsigned int LoadTexture(const char* file_path, bool gamma_correction) {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 
 	int width, height, nrComponents;
 	unsigned char* data = stbi_load(file_path, &width, &height, &nrComponents, 0);
 	if (data) {
-		GLenum format { GL_RGB };
+		GLenum format{ GL_RGB };
+		GLenum internal_format { GL_RGB };
 		if (nrComponents == 1)
-			format = GL_RED;
-		else if (nrComponents == 3)
+			internal_format = format = GL_RED;
+		else if (nrComponents == 3) {
+			internal_format = gamma_correction ? GL_SRGB : GL_RGB;
 			format = GL_RGB;
-		else if (nrComponents == 4)
+		}
+		else if (nrComponents == 4) {
+			internal_format = gamma_correction ? GL_SRGB_ALPHA : GL_RGBA;
 			format = GL_RGBA;
+		}
 
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		// use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
