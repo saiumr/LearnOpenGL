@@ -11,12 +11,17 @@ uniform sampler2D floor_texture;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform bool blinn;
+uniform bool enable_gamma;
+uniform bool enable_quadratic;
 
 void main()
 {           
     float gamma = 2.2;
     vec3 color = texture(floor_texture, fs_in.TexCoords).rgb;
-    color.rgb = pow(color.rgb, vec3(gamma));
+    // gamma decode diffuse texture
+    if (enable_gamma) {
+        color.rgb = pow(color.rgb, vec3(gamma));
+    }
     // ambient
     vec3 ambient = 0.05 * color;
     // diffuse
@@ -39,8 +44,19 @@ void main()
         spec = pow(max(dot(viewDir, reflectDir), 0.0), 8.0);
     }
     vec3 specular = vec3(0.3) * spec; // assuming bright white light color
+
+    // simple attenuation
+    float max_distance = 1.5;
+    float distance = length(lightPos - fs_in.FragPos);
+    float attenuation = 1.0 / (enable_quadratic ? distance * distance : distance);
+
+    diffuse *= attenuation;
+    specular *= attenuation;
+
     FragColor = vec4(ambient + diffuse + specular, 1.0);
 
-
-    FragColor.rgb = pow(FragColor.rgb, vec3(1.0/gamma));
+    // gamma encode
+    if (enable_gamma) {
+        FragColor.rgb = pow(FragColor.rgb, vec3(1.0/gamma));
+    }
 }

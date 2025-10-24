@@ -130,6 +130,8 @@
   <ItemGroup>
     <None Include="advanced_lighting.frag" />
     <None Include="advanced_lighting.vert" />
+    <None Include="light_cube.frag" />
+    <None Include="light_cube.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />

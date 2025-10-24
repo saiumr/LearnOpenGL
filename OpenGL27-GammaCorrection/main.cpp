@@ -35,6 +35,10 @@ float delta_time { 0.0f };
 float last_frame { 0.0f };
 
 bool blinn { true };
+bool enable_gamma { false };
+bool gamma_key_pressed { false };     // g
+bool enable_quadratic {false};
+bool quadratic_key_pressed { false }; // f
 
 int main(int argc, const char** argv) {
 	if (InitWindow() < 0) {
@@ -55,6 +59,7 @@ void RenderLoop() {
 	Vertex vertex;
 	unsigned int floor_texture { LoadTexture("wood.jpg") };
 	Shader shader { "advanced_lighting.vert", "advanced_lighting.frag" };
+	Shader light_shader { "light_cube.vert", "light_cube.frag" };
 
 	shader.use();
 	shader.setInt("floor_texture", 0);
@@ -79,13 +84,26 @@ void RenderLoop() {
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
 		shader.setVec3("viewPos", camera.Position);
+		light_pos.y = std::fabs( sin(glfwGetTime()) * 0.02 ) * 20.0f;
 		shader.setVec3("lightPos", light_pos);
 		shader.setBool("blinn", blinn);
+		shader.setBool("enable_gamma", enable_gamma);
+		shader.setBool("enable_quadratic", enable_quadratic);
 
 		glBindVertexArray(vertex.planeVAO);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, floor_texture);
 		vertex.Draw(vertex.planeVAO);
+
+		light_shader.use();
+		model = glm::mat4{ 1.0f };
+		model = glm::translate(model, light_pos);
+		model = glm::scale(model, glm::vec3{ 0.2f });
+		light_shader.setMat4("model", model);
+		light_shader.setMat4("view", view);
+		light_shader.setMat4("projection", projection);
+		glBindVertexArray(vertex.cubeVAO);
+		vertex.Draw(vertex.cubeVAO);
 
 		glBindVertexArray(0);
 
@@ -94,6 +112,7 @@ void RenderLoop() {
 	}
 
 	shader.Clean();
+	light_shader.Clean();
 }
 
 
@@ -106,7 +125,7 @@ int InitWindow() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	window = glfwCreateWindow(kScreenWidth, kScreenHeight, "Advanced Lighting: Blinn-Phong", nullptr, nullptr);
+	window = glfwCreateWindow(kScreenWidth, kScreenHeight, "Advanced Lighting: Gamma correction", nullptr, nullptr);
 	if (!window) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		return -1;
@@ -190,6 +209,32 @@ void ProcessInput(GLFWwindow* window) {
 		} else {
 			std::cout << "Phong" << std::endl;
 		}
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gamma_key_pressed) {
+		enable_gamma = !enable_gamma;
+		gamma_key_pressed = true;
+		if (enable_gamma) {
+			std::cout << "Gamma correction enabled" << std::endl;
+		} else {
+			std::cout << "Gamma correction disabled" << std::endl;
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE) {
+		gamma_key_pressed = false;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && !quadratic_key_pressed) {
+		enable_quadratic = !enable_quadratic;
+		quadratic_key_pressed = true;
+		if (enable_quadratic) {
+			std::cout << "Quadratic attenuation enabled" << std::endl;
+		} else {
+			std::cout << "Quadratic attenuation disabled" << std::endl;
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE) {
+		quadratic_key_pressed = false;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
