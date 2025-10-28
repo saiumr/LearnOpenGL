@@ -13,5 +13,6 @@ float LinearizeDepth(float depth)
 void main()
 {             
     float depth = LinearizeDepth(gl_FragCoord.z) / far; // 为了演示除以 far
+    // depth = gl_FragCoord.z;  // 使用非线性深度值(近距离变化剧烈，精度高，远距离几乎看不出变化)
     FragColor = vec4(vec3(depth), 1.0);
 }
