@@ -128,10 +128,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="debug_quad.frag" />
+    <None Include="debug_quad.vert" />
     <None Include="objects.frag" />
     <None Include="objects.vert" />
     <None Include="light_cube.frag" />
     <None Include="light_cube.vert" />
+    <None Include="shadow_mapping_depth.frag" />
+    <None Include="shadow_mapping_depth.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />

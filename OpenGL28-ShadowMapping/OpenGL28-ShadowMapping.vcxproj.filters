@@ -19,6 +19,10 @@
     <None Include="objects.vert" />
     <None Include="light_cube.frag" />
     <None Include="light_cube.vert" />
+    <None Include="debug_quad.vert" />
+    <None Include="debug_quad.frag" />
+    <None Include="shadow_mapping_depth.vert" />
+    <None Include="shadow_mapping_depth.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">

@@ -56,6 +56,8 @@ void RenderLoop() {
 	unsigned int box_texture   { LoadTexture("box.jpg", true) };
 	Shader shader { "objects.vert", "objects.frag" };
 	Shader light_shader { "light_cube.vert", "light_cube.frag" };
+	Shader debug_quad_shader { "debug_quad.vert", "debug_quad.frag" };
+	Shader simple_depth_shader { "shadow_mapping_depth.vert", "shadow_mapping_depth.frag" };
 
 	shader.use();
 	shader.setInt("advance_texture", 0);
@@ -75,6 +77,29 @@ void RenderLoop() {
 	bool lock { true };
 	float radius { 1.5f };
 
+	// create depth map fbo
+	const int kShadowWidth  { 1024 };
+	const int kShadowHeight { 1024 };
+	unsigned int depth_map_fbo;
+	glGenFramebuffers(1, &depth_map_fbo);
+	unsigned int depth_map;
+	glGenTextures(1, &depth_map);
+	glBindTexture(GL_TEXTURE_2D, depth_map);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, kShadowWidth, kShadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// attach depth texture as fbo's depth buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	debug_quad_shader.use();
+	debug_quad_shader.setInt("depthMap", 0);
+
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
 		delta_time = current_frame - last_frame;
@@ -85,15 +110,7 @@ void RenderLoop() {
 		glClearColor(0.15f, 0.16f, 0.18f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::mat4 model{ 1.0f };
-		glm::mat4 view{ camera.GetViewMatrix() };
-		glm::mat4 projection{ glm::perspective(glm::radians(45.0f), static_cast<float>(kScreenWidth) / static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
-		shader.use();
-		shader.setMat4("model", model);
-		shader.setMat4("view", view);
-		shader.setMat4("projection", projection);
-		shader.setVec3("viewPos", camera.Position);
-		
+		// light moving
 		if (!lock && std::fabs(light_pos.x - radius) < 0.01f) {
 			another_side = !another_side;
 			lock = true;
@@ -104,17 +121,72 @@ void RenderLoop() {
 		}
 
 		if (another_side) {
-			light_pos.x = static_cast<float>(std::cos(3.14159f + glfwGetTime())) * radius + 2*radius;
-		} else {
+			light_pos.x = static_cast<float>(std::cos(3.14159f + glfwGetTime())) * radius + 2 * radius;
+		}
+		else {
 			light_pos.x = static_cast<float>(std::cos(glfwGetTime())) * radius;
 		}
-		light_pos.y = 0.8f;
+		light_pos.y = 4.0f;
 		light_pos.z = static_cast<float>(std::sin(glfwGetTime())) * radius;
+
+		// render depth of scene to texture (from light's orthogonal projection)
+		glm::mat4 light_projection{ 1.0f }, light_view{ 1.0f };
+		glm::mat4 light_space_matrix{ 1.0f };
+		float near_plane{ 1.0f }, far_plane{ 7.5f };
+		light_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+		//light_pos = glm::vec3{ -2.0f, 4.0f, -1.0f };
+		light_view = glm::lookAt(light_pos, glm::vec3{ 0.0f }, glm::vec3{ 0.0f, 1.0f, 0.0f });
+		light_space_matrix = light_projection * light_view;
+		// render scene from light's point of view
+		simple_depth_shader.use();
+		simple_depth_shader.setMat4("lightSpaceMatrix", light_space_matrix);
+		glViewport(0, 0, kShadowWidth, kShadowHeight);
+		glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		// render scene: plane and boxes
+		glm::mat4 model{ 1.0f };
+		simple_depth_shader.setMat4("model", model);
+		glBindVertexArray(vertex.planeVAO);
+		vertex.Draw(vertex.planeVAO);
+
+		glEnable(GL_CULL_FACE);
+		glBindVertexArray(vertex.cubeVAO);
+		for (const auto& m : boxes) {
+			model = glm::mat4{ 1.0f };
+			model = glm::translate(model, m);
+			simple_depth_shader.setMat4("model", model);
+			vertex.Draw(vertex.cubeVAO);
+		}
+		glDisable(GL_CULL_FACE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// reset viewport
+		glViewport(0, 0, kScreenWidth, kScreenHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// debug
+		debug_quad_shader.use();
+		debug_quad_shader.setFloat("near_plane", near_plane);
+		debug_quad_shader.setFloat("far_plane", far_plane);
+		glDisable(GL_DEPTH_TEST);
+		glBindVertexArray(vertex.quadVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depth_map);
+		vertex.Draw(vertex.quadVAO);
+		glEnable(GL_DEPTH_TEST);
+
+		/*
+		model = glm::mat4{ 1.0f };
+		glm::mat4 view{ camera.GetViewMatrix() };
+		glm::mat4 projection{ glm::perspective(glm::radians(45.0f), static_cast<float>(kScreenWidth) / static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
+		shader.use();
+		shader.setMat4("model", model);
+		shader.setMat4("view", view);
+		shader.setMat4("projection", projection);
+		shader.setVec3("viewPos", camera.Position);
 		shader.setVec3("lightPos", light_pos);
 		shader.setFloat("shininess", 32.0f);
-
 		glBindVertexArray(vertex.planeVAO);
-		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, floor_texture);
 		vertex.Draw(vertex.planeVAO);
 
@@ -130,6 +202,7 @@ void RenderLoop() {
 		}
 		glDisable(GL_CULL_FACE);
 
+		// light cube
 		light_shader.use();
 		model = glm::mat4{ 1.0f };
 		model = glm::translate(model, light_pos);
@@ -139,6 +212,7 @@ void RenderLoop() {
 		light_shader.setMat4("projection", projection);
 		glBindVertexArray(vertex.cubeVAO);
 		vertex.Draw(vertex.cubeVAO);
+		*/
 
 		glBindVertexArray(0);
 
@@ -148,6 +222,8 @@ void RenderLoop() {
 
 	shader.Clean();
 	light_shader.Clean();
+	debug_quad_shader.Clean();
+	simple_depth_shader.Clean();
 }
 
 
