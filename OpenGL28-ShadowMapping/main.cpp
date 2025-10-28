@@ -111,7 +111,7 @@ void RenderLoop() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// light moving
-		if (!lock && std::fabs(light_pos.x - radius) < 0.01f) {
+		if (!lock && std::fabs(light_pos.x) < 0.01f) {
 			another_side = !another_side;
 			lock = true;
 		}
@@ -121,10 +121,10 @@ void RenderLoop() {
 		}
 
 		if (another_side) {
-			light_pos.x = static_cast<float>(std::cos(3.14159f + glfwGetTime())) * radius + 2 * radius;
+			light_pos.x = static_cast<float>(std::cos(3.14159f + glfwGetTime())) * radius + radius;
 		}
 		else {
-			light_pos.x = static_cast<float>(std::cos(glfwGetTime())) * radius;
+			light_pos.x = static_cast<float>(std::cos(glfwGetTime())) * radius - radius;
 		}
 		light_pos.y = 4.0f;
 		light_pos.z = static_cast<float>(std::sin(glfwGetTime())) * radius;
@@ -201,7 +201,7 @@ void RenderLoop() {
 			vertex.Draw(vertex.cubeVAO);
 		}
 		glDisable(GL_CULL_FACE);
-
+		
 		// light cube
 		light_shader.use();
 		model = glm::mat4{ 1.0f };
