@@ -15,8 +15,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="objects.frag" />
-    <None Include="objects.vert" />
+    <None Include="shadow_mapping.frag" />
+    <None Include="shadow_mapping.vert" />
     <None Include="light_cube.frag" />
     <None Include="light_cube.vert" />
     <None Include="debug_quad.vert" />

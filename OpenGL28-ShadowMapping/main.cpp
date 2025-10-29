@@ -54,7 +54,7 @@ void RenderLoop() {
 	Vertex vertex;
 	unsigned int floor_texture { LoadTexture("wood.jpg", true) };
 	unsigned int box_texture   { LoadTexture("box.jpg", true) };
-	Shader shader { "objects.vert", "objects.frag" };
+	Shader shader { "shadow_mapping.vert", "shadow_mapping.frag" };
 	Shader light_shader { "light_cube.vert", "light_cube.frag" };
 	Shader debug_quad_shader { "debug_quad.vert", "debug_quad.frag" };
 	Shader simple_depth_shader { "shadow_mapping_depth.vert", "shadow_mapping_depth.frag" };
