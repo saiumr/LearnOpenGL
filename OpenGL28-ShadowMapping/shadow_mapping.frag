@@ -29,6 +29,11 @@ float ShadowCalculation(vec4 fragPosLightSpace, float bias) {
     // check whether current frag pos is in shadow
     float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
 
+    // 光锥之外深度值大于1，让它们阴影度为0模拟太阳更真实
+    if (projCoords.z > 1.0) {
+        shadow = 0.0;
+    }
+
     return shadow;
 }
 
@@ -37,7 +42,7 @@ void main()
     float gamma = 2.2;
     vec3 color = texture(diffuse_texture, fs_in.TexCoords).rgb;
     vec3 normal = normalize(fs_in.Normal);
-    vec3 lightColor = vec3(0.3);
+    vec3 lightColor = vec3(0.5);
     // ambient
     vec3 ambient = 0.2 * lightColor;
     // diffuse

@@ -89,8 +89,15 @@ void RenderLoop() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, kShadowWidth, kShadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// 解决超采样的问题，更改纹理环绕方式 GL_REPEAT->GL_CLAMP_TO_BORDER
+	// 当场景大于投影光锥，GL_REPEAT方式渲染阴影问题即刻显现，当然我们设置的光锥够大，没看出差别
+	// 把下面 side_range 改小就能看到问题了
+	// 采样深度贴图[0,1]范围以外的区域，纹理函数总会返回一个1.0的深度值
+	// 由此得到的阴影值始终为0.0，结果看起来会更真实
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float border_color[] = { 1.0, 1.0, 1.0, 1.0 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
 	// attach depth texture as fbo's depth buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map, 0);
@@ -146,6 +153,7 @@ void RenderLoop() {
 		glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		// render scene: plane and boxes
+		// 阴影悬浮的问题不明显，改正面剔除反而有其他问题，就先不改了
 		glm::mat4 model{ 1.0f };
 		simple_depth_shader.setMat4("model", model);
 		glBindVertexArray(vertex.planeVAO);
