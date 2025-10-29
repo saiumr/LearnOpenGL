@@ -89,4 +89,3 @@ layout (std140) uniform ExampleBlock
 - [理解阴影失真](https://www.zhihu.com/question/49090321)  
 - [正面剔除解决阴影悬浮问题](https://www.zhihu.com/question/321779117)  
 - 正面剔除和设置阴影bias不能同时启用，或者说bias设置过大了  
-- 文章Blinn-Phong光照模型使用点光源计算，然而讨论的是平行光的投影效果，肉眼看上去差不多，Demo 中已修正  
