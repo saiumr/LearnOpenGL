@@ -22,12 +22,26 @@ float ShadowCalculation(vec4 fragPosLightSpace, float bias) {
     // transform to [0,1] range
     projCoords = projCoords * 0.5 + 0.5;  // <=> (projCoords + 1)*0.5, transform it to NDC
     // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    float closestDepth = texture(depthMap, projCoords.xy).r;
+    // float closestDepth = texture(depthMap, projCoords.xy).r;
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
 
     // check whether current frag pos is in shadow
-    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+    // float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+
+    // PCF  百分比渐进滤波(percentage-closer filtering)
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(depthMap, 0);
+    for(int x = -1; x <= 1; ++x) {
+        for(int y = -1; y <= 1; ++y) {
+            // 对深度贴图多次采样邻近深度取平均值抗锯齿，这里是 3x3 共取 9 个像素点最近深度
+            // 当然，也可以直接增加深度贴图分辨率抗锯齿，PCF是出于性能考虑的，而且有多种方法，并不是只能取平均值
+            // 近距离可以观察到阴影边缘变得柔和了
+            float pcfDepth = texture(depthMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
+        }    
+    }
+    shadow /= 9.0;
 
     // 光锥之外深度值大于1，让它们阴影度为0模拟太阳更真实
     if (projCoords.z > 1.0) {
@@ -42,7 +56,7 @@ void main()
     float gamma = 2.2;
     vec3 color = texture(diffuse_texture, fs_in.TexCoords).rgb;
     vec3 normal = normalize(fs_in.Normal);
-    vec3 lightColor = vec3(0.5);
+    vec3 lightColor = vec3(0.3);
     // ambient
     vec3 ambient = 0.2 * lightColor;
     // diffuse
