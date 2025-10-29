@@ -14,7 +14,7 @@ uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform float shininess;
 
-float ShadowCalculation(vec4 fragPosLightSpace) {
+float ShadowCalculation(vec4 fragPosLightSpace, float bias) {
     // 下面这行透视除法只在透视投影有用，正交投影w=1不会变化
     // 保留下来为了将平行光（正交投影）改为点光源（透视投影）也能使用
     // perform perspective divide
@@ -27,7 +27,6 @@ float ShadowCalculation(vec4 fragPosLightSpace) {
     float currentDepth = projCoords.z;
 
     // check whether current frag pos is in shadow
-    float bias = 0.005;
     float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
 
     return shadow;
@@ -65,7 +64,8 @@ void main()
     */
 
     // calculate shadow
-    float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    float shadow = ShadowCalculation(fs_in.FragPosLightSpace, bias);
     // 环境光不受阴影影响，但倘若片段在阴影中，将失去漫反射光和镜面光
     vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
 
