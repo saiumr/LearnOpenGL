@@ -147,9 +147,9 @@ void RenderLoop() {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		// render scene: plane and boxes
 		glm::mat4 model{ 1.0f };
-		//simple_depth_shader.setMat4("model", model);
-		//glBindVertexArray(vertex.planeVAO);
-		//vertex.Draw(vertex.planeVAO);
+		simple_depth_shader.setMat4("model", model);
+		glBindVertexArray(vertex.planeVAO);
+		vertex.Draw(vertex.planeVAO);
 
 		glEnable(GL_CULL_FACE);
 		glBindVertexArray(vertex.cubeVAO);
