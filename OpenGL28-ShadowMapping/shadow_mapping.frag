@@ -5,24 +5,45 @@ in VS_OUT {
     vec3 FragPos;
     vec3 Normal;
     vec2 TexCoords;
+    vec4 FragPosLightSpace;
 } fs_in;
 
-uniform sampler2D advance_texture;
+uniform sampler2D diffuse_texture;
+uniform sampler2D depthMap;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform float shininess;
 
+float ShadowCalculation(vec4 fragPosLightSpace) {
+    // 下面这行透视除法只在透视投影有用，正交投影w=1不会变化
+    // 保留下来为了将平行光（正交投影）改为点光源（透视投影）也能使用
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;  // <=> (projCoords + 1)*0.5, transform it to NDC
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(depthMap, projCoords.xy).r;
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+
+    return shadow;
+}
+
 void main()
 {           
     float gamma = 2.2;
-    vec3 color = texture(advance_texture, fs_in.TexCoords).rgb;
+    vec3 color = texture(diffuse_texture, fs_in.TexCoords).rgb;
+    vec3 normal = normalize(fs_in.Normal);
+    vec3 lightColor = vec3(0.3);
     // ambient
-    vec3 ambient = 0.2 * color;
+    vec3 ambient = 0.2 * lightColor;
     // diffuse
     vec3 lightDir = normalize(lightPos - fs_in.FragPos);
-    vec3 normal = normalize(fs_in.Normal);
     float diff = max(dot(lightDir, normal), 0.0);
-    vec3 diffuse = diff * color;
+    vec3 diffuse = diff * lightColor;
     // specular
     vec3 viewDir = normalize(viewPos - fs_in.FragPos);
     vec3 reflectDir = reflect(-lightDir, normal);
@@ -30,17 +51,24 @@ void main()
     // Blinn-Phong lighting model
     vec3 halfwayDir = normalize(lightDir + viewDir);  
     spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
-    vec3 specular = vec3(0.3) * spec; // assuming bright white light color
+    vec3 specular = lightColor * spec; // assuming bright white light color
 
-    // simple attenuation
+    // sun light no attenuation
+    /*
     float max_distance = 1.5;
     float distance = length(lightPos - fs_in.FragPos);
     float attenuation = 1.0 / (distance * distance);
 
     diffuse *= attenuation;
     specular *= attenuation;
+    */
 
-    FragColor = vec4(ambient + diffuse + specular, 1.0);
+    // calculate shadow
+    float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
+    // 环境光不受阴影影响，但倘若片段在阴影中，将失去漫反射光和镜面光
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
+
+    FragColor = vec4(lighting, 1.0);
 
     // gamma encode
     FragColor.rgb = pow(FragColor.rgb, vec3(1.0/gamma));

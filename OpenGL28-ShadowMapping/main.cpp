@@ -60,7 +60,8 @@ void RenderLoop() {
 	Shader simple_depth_shader { "shadow_mapping_depth.vert", "shadow_mapping_depth.frag" };
 
 	shader.use();
-	shader.setInt("advance_texture", 0);
+	shader.setInt("diffuse_texture", 0);
+	shader.setInt("depthMap", 1);
 
 	glm::vec3 light_pos { 0.0f, 0.0f, 0.0f };
 
@@ -126,14 +127,15 @@ void RenderLoop() {
 		else {
 			light_pos.x = static_cast<float>(std::cos(glfwGetTime())) * radius - radius;
 		}
-		light_pos.y = 4.0f;
+		light_pos.y = 3.0f;
 		light_pos.z = static_cast<float>(std::sin(glfwGetTime())) * radius;
 
 		// render depth of scene to texture (from light's orthogonal projection)
 		glm::mat4 light_projection{ 1.0f }, light_view{ 1.0f };
 		glm::mat4 light_space_matrix{ 1.0f };
 		float near_plane{ 1.0f }, far_plane{ 7.5f };
-		light_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+		float side_range{ 10.0f };
+		light_projection = glm::ortho(-side_range, side_range, -side_range, side_range, near_plane, far_plane);
 		//light_pos = glm::vec3{ -2.0f, 4.0f, -1.0f };
 		light_view = glm::lookAt(light_pos, glm::vec3{ 0.0f }, glm::vec3{ 0.0f, 1.0f, 0.0f });
 		light_space_matrix = light_projection * light_view;
@@ -145,9 +147,9 @@ void RenderLoop() {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		// render scene: plane and boxes
 		glm::mat4 model{ 1.0f };
-		simple_depth_shader.setMat4("model", model);
-		glBindVertexArray(vertex.planeVAO);
-		vertex.Draw(vertex.planeVAO);
+		//simple_depth_shader.setMat4("model", model);
+		//glBindVertexArray(vertex.planeVAO);
+		//vertex.Draw(vertex.planeVAO);
 
 		glEnable(GL_CULL_FACE);
 		glBindVertexArray(vertex.cubeVAO);
@@ -164,44 +166,40 @@ void RenderLoop() {
 		glViewport(0, 0, kScreenWidth, kScreenHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// debug
-		debug_quad_shader.use();
-		debug_quad_shader.setFloat("near_plane", near_plane);
-		debug_quad_shader.setFloat("far_plane", far_plane);
-		glDisable(GL_DEPTH_TEST);
-		glBindVertexArray(vertex.quadVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, depth_map);
-		vertex.Draw(vertex.quadVAO);
-		glEnable(GL_DEPTH_TEST);
-
-		/*
+		// render normal scene
 		model = glm::mat4{ 1.0f };
 		glm::mat4 view{ camera.GetViewMatrix() };
 		glm::mat4 projection{ glm::perspective(glm::radians(45.0f), static_cast<float>(kScreenWidth) / static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
+
 		shader.use();
+		// plane
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
 		shader.setVec3("viewPos", camera.Position);
 		shader.setVec3("lightPos", light_pos);
-		shader.setFloat("shininess", 32.0f);
+		shader.setMat4("lightSpaceMatrix", light_space_matrix);
+		shader.setFloat("shininess", 64.0f);
 		glBindVertexArray(vertex.planeVAO);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, depth_map);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, floor_texture);
 		vertex.Draw(vertex.planeVAO);
 
+		// boxes
 		shader.setFloat("shininess", 16.0f);
 		glEnable(GL_CULL_FACE);
 		glBindVertexArray(vertex.cubeVAO);
 		glBindTexture(GL_TEXTURE_2D, box_texture);
-		for (const auto& m: boxes) {
-			model = glm::mat4 { 1.0f };
+		for (const auto& m : boxes) {
+			model = glm::mat4{ 1.0f };
 			model = glm::translate(model, m);
 			shader.setMat4("model", model);
 			vertex.Draw(vertex.cubeVAO);
 		}
 		glDisable(GL_CULL_FACE);
-		
+
 		// light cube
 		light_shader.use();
 		model = glm::mat4{ 1.0f };
@@ -212,6 +210,17 @@ void RenderLoop() {
 		light_shader.setMat4("projection", projection);
 		glBindVertexArray(vertex.cubeVAO);
 		vertex.Draw(vertex.cubeVAO);
+
+		// debug
+		/*
+		debug_quad_shader.use();
+		debug_quad_shader.setFloat("near_plane", near_plane);
+		debug_quad_shader.setFloat("far_plane", far_plane);
+		glDisable(GL_DEPTH_TEST);
+		glBindVertexArray(vertex.quadVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depth_map);
+		vertex.Draw(vertex.quadVAO);
 		*/
 
 		glBindVertexArray(0);
