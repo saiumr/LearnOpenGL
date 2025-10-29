@@ -154,6 +154,8 @@ void RenderLoop() {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		// render scene: plane and boxes
 		// 阴影悬浮的问题不明显，改正面剔除反而有其他问题，就先不改了
+		// 正面剔除不可与bias同用，或者说bias设置太大了，教程评论区有人这样说
+		// 可以看这篇博客：https://www.zhihu.com/question/321779117
 		glm::mat4 model{ 1.0f };
 		simple_depth_shader.setMat4("model", model);
 		glBindVertexArray(vertex.planeVAO);

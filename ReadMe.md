@@ -79,3 +79,14 @@ layout (std140) uniform ExampleBlock
 使用方式参考篇章图解：[使用Uniform缓冲](https://learnopengl-cn.github.io/04%20Advanced%20OpenGL/08%20Advanced%20GLSL/#uniform_2)
 
 大体流程是绑定shader uniform block和UBO到同一个绑定点，然后将数据拷贝到（设置到）UBO中。
+
+### Shadow Mapping  
+
+阴影映射章节问题较多，可以参考 Demo OpenGL28 源码注释理解  
+
+问题集中在后半部分，整理了一些博客和解答：  
+
+- [理解阴影失真](https://www.zhihu.com/question/49090321)  
+- [正面剔除解决阴影悬浮问题](https://www.zhihu.com/question/321779117)  
+- 正面剔除和设置阴影bias不能同时启用，或者说bias设置过大了  
+- 文章Blinn-Phong光照模型使用点光源计算，然而讨论的是平行光的投影效果，肉眼看上去差不多，Demo 中已修正  
