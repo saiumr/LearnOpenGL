@@ -142,6 +142,7 @@
     <None Include="point_shadows.frag" />
     <None Include="point_shadows.vert" />
     <None Include="point_shadows_depth.frag" />
+    <None Include="point_shadows_depth.geom" />
     <None Include="point_shadows_depth.vert" />
   </ItemGroup>
   <ItemGroup>

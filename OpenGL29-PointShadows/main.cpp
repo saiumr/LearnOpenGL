@@ -56,10 +56,11 @@ void RenderLoop() {
 	unsigned int box_texture   { LoadTexture("box.jpg", true) };
 	Shader shader { "point_shadows.vert", "point_shadows.frag" };
 	Shader light_shader { "light_cube.vert", "light_cube.frag" };
-	Shader simple_depth_shader { "point_shadows_depth.vert", "point_shadows_depth.frag" };
+	Shader simple_depth_shader { "point_shadows_depth.vert", "point_shadows_depth.frag", "point_shadows_depth.geom" };
 
 	shader.use();
 	shader.setInt("diffuse_texture", 0);
+	shader.setInt("depthMap", 1);
 
 	glm::vec3 light_pos { 0.0f, 0.0f, 0.0f };
 
@@ -135,34 +136,86 @@ void RenderLoop() {
 			light_pos.x = a;
 			light_pos.y = b;
 		}
+		//light_pos = glm::vec3{ 0.0f };
+		// set depth map transform matrix
+		float aspect{ static_cast<float>(kShadowWidth) / static_cast<float>(kShadowHeight) };
+		float near { 1.0f };
+		float far { 25.0f };
+		glm::mat4 shadow_projection{ glm::perspective(glm::radians(90.0f), aspect, near, far) };  // transform radians
+		// 1. 纹理坐标（UV/ST）的 V/T 轴默认向下递增（原点(0,0)在纹理左上角），与笛卡尔坐标系（世界/观察空间）Y轴向上的方向天然相反；
+		// 2. 立方体贴图的 ±X、±Z 面将这种“V/T轴向下”特性与观察空间的 -Y 轴强制绑定，这是 OpenGL 规定的固定映射规则；
+		// 3. 普通相机渲染到屏幕时，OpenGL 会自动翻转 V/T 轴以匹配人眼直观的“上为正”，无需手动调整 up 向量；
+		// 4. 点光源阴影需渲染到立方体贴图，需手动匹配纹理坐标方向，因此 up 向量设为(0,-1,0)，让观察空间 -Y 轴与纹理 V/T 轴方向一致，避免深度图上下颠倒导致阴影错位。
+		std::array<glm::mat4, 6> shadow_transforms {
+			shadow_projection * glm::lookAt(light_pos, light_pos + glm::vec3(1.0,  0.0,  0.0), glm::vec3(0.0,-1.0,  0.0)),
+			shadow_projection * glm::lookAt(light_pos, light_pos + glm::vec3(-1.0, 0.0,  0.0), glm::vec3(0.0,-1.0,  0.0)),
+			shadow_projection * glm::lookAt(light_pos, light_pos + glm::vec3(0.0,  1.0,  0.0), glm::vec3(0.0, 0.0,  1.0)),
+			shadow_projection * glm::lookAt(light_pos, light_pos + glm::vec3(0.0, -1.0,  0.0), glm::vec3(0.0, 0.0, -1.0)),
+			shadow_projection * glm::lookAt(light_pos, light_pos + glm::vec3(0.0,  0.0,  1.0), glm::vec3(0.0,-1.0,  0.0)),
+			shadow_projection * glm::lookAt(light_pos, light_pos + glm::vec3(0.0,  0.0, -1.0), glm::vec3(0.0,-1.0,  0.0)),
+		};
 
+		// render secene to depth map
+		glViewport(0, 0, kShadowWidth, kShadowHeight);
+		glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		simple_depth_shader.use();
+		for (int i = 0; i < 6; ++i) {
+			simple_depth_shader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadow_transforms[i]);
+		}
+		simple_depth_shader.setFloat("far_plane", far);
+		simple_depth_shader.setVec3("lightPos", light_pos);
+		// render scene
+		glm::mat4 model { 1.0f };
+		model = glm::scale(model, glm::vec3{ 16.0f });
+		simple_depth_shader.setMat4("model", model);
+		glBindVertexArray(vertex.cubeVAO);
+		vertex.Draw(vertex.cubeVAO);
+
+		glEnable(GL_CULL_FACE);
+		glBindVertexArray(vertex.cubeVAO);
+		for (const auto& m : boxes) {
+			model = glm::mat4{ 1.0f };
+			model = glm::translate(model, m);
+			simple_depth_shader.setMat4("model", model);
+			vertex.Draw(vertex.cubeVAO);
+		}
+		glDisable(GL_CULL_FACE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// reset renderer status
+		glViewport(0, 0, kScreenWidth, kScreenHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// render normal scene
-		glm::mat4 model { 1.0f };
+		model = glm::mat4 { 1.0f };
 		glm::mat4 view  { camera.GetViewMatrix() };
 		glm::mat4 projection{ glm::perspective(glm::radians(45.0f), static_cast<float>(kScreenWidth) / static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
 
 		shader.use();
-		// plane
+		// container
 		model = glm::scale(model, glm::vec3{ 16.0f });
 		shader.setMat4("model", model);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
 		shader.setVec3("viewPos", camera.Position);
 		shader.setVec3("lightPos", light_pos);
+		shader.setFloat("far_plane", far);
 		shader.setFloat("shininess", 64.0f);
 		shader.setBool("reverse_normal", true);
-		glBindVertexArray(vertex.cubeVAO);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, depth_cube_map);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, floor_texture);
+		glBindVertexArray(vertex.cubeVAO);
 		vertex.Draw(vertex.cubeVAO);
 
 		// boxes
 		shader.setFloat("shininess", 16.0f);
 		shader.setBool("reverse_normal", false);
 		glEnable(GL_CULL_FACE);
-		glBindVertexArray(vertex.cubeVAO);
 		glBindTexture(GL_TEXTURE_2D, box_texture);
+		glBindVertexArray(vertex.cubeVAO);
 		for (const auto& m : boxes) {
 			model = glm::mat4{ 1.0f };
 			model = glm::translate(model, m);

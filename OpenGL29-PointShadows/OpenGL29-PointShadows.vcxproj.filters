@@ -40,6 +40,7 @@
     <None Include="point_shadows.vert" />
     <None Include="point_shadows_depth.frag" />
     <None Include="point_shadows_depth.vert" />
+    <None Include="point_shadows_depth.geom" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

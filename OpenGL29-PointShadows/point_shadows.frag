@@ -8,10 +8,28 @@ in VS_OUT {
 } fs_in;
 
 uniform sampler2D diffuse_texture;
-uniform sampler2D depthMap;
+uniform samplerCube depthMap;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform float shininess;
+uniform float far_plane;
+
+float ShadowCalculation(vec3 fragPos)
+{
+    // Get vector between fragment position and light position
+    vec3 fragToLight = fragPos - lightPos;
+    // Use the light to fragment vector to sample from the depth map    
+    float closestDepth = texture(depthMap, fragToLight).r;
+    // It is currently in linear range between [0,1]. Re-transform back to original value
+    closestDepth *= far_plane;
+    // Now get current linear depth as the length between the fragment and light position
+    float currentDepth = length(fragToLight);
+    // Now test for shadows
+    float bias = 0.05; 
+    float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+}
 
 void main()
 {           
@@ -43,7 +61,9 @@ void main()
     specular *= attenuation;
     */
     
-    vec3 lighting = (ambient + diffuse + specular) * color;
+    // Calculate shadow
+    float shadow = ShadowCalculation(fs_in.FragPos);                      
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color; 
     FragColor = vec4(lighting, 1.0);
 
     // gamma encode
