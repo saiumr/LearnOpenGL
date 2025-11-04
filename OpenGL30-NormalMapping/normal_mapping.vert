@@ -29,8 +29,12 @@ void main() {
 
     mat3 normalMatrix = transpose(inverse(mat3(model)));
     vec3 T = normalize(normalMatrix * tangent);
-    vec3 B = normalize(normalMatrix * bitangent);
     vec3 N = normalize(normalMatrix * normal);
+    // 共享顶点多的时候TBN可能就不是正交的了，我们可以用施密特正交化计算出副切线B（N和T、B一定正交，N垂直于切面）
+    // re-orthogonalize T with respect to N
+    T = normalize(T - dot(T, N) * N);
+    // then retrieve perpendicular vector B with the cross product of T and N
+    vec3 B = cross(T, N);
     
     mat3 TBN = transpose(mat3(T, B, N));  // 正交矩阵的转置  <=>  矩阵的逆
     // 世界空间 -> 切线空间
