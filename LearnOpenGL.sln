@@ -99,6 +99,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL28-ShadowMapping", "O
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL29-PointShadows", "OpenGL29-PointShadows\OpenGL29-PointShadows.vcxproj", "{328EA520-12AB-495B-8E5D-D6AA18B39EA1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL30-NormalMapping", "OpenGL30-NormalMapping\OpenGL30-NormalMapping.vcxproj", "{90F8AE1A-6852-4210-AF45-E27AF374DED3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -355,6 +357,14 @@ Global
 		{328EA520-12AB-495B-8E5D-D6AA18B39EA1}.Release|x64.Build.0 = Release|x64
 		{328EA520-12AB-495B-8E5D-D6AA18B39EA1}.Release|x86.ActiveCfg = Release|Win32
 		{328EA520-12AB-495B-8E5D-D6AA18B39EA1}.Release|x86.Build.0 = Release|Win32
+		{90F8AE1A-6852-4210-AF45-E27AF374DED3}.Debug|x64.ActiveCfg = Debug|x64
+		{90F8AE1A-6852-4210-AF45-E27AF374DED3}.Debug|x64.Build.0 = Debug|x64
+		{90F8AE1A-6852-4210-AF45-E27AF374DED3}.Debug|x86.ActiveCfg = Debug|Win32
+		{90F8AE1A-6852-4210-AF45-E27AF374DED3}.Debug|x86.Build.0 = Debug|Win32
+		{90F8AE1A-6852-4210-AF45-E27AF374DED3}.Release|x64.ActiveCfg = Release|x64
+		{90F8AE1A-6852-4210-AF45-E27AF374DED3}.Release|x64.Build.0 = Release|x64
+		{90F8AE1A-6852-4210-AF45-E27AF374DED3}.Release|x86.ActiveCfg = Release|Win32
+		{90F8AE1A-6852-4210-AF45-E27AF374DED3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -391,6 +401,7 @@ Global
 		{B9F2158C-EFE2-4DD4-8F46-D9073367759E} = {F477EC6A-151E-40E1-81B0-27C239387B9C}
 		{05B85AFE-DECE-47E3-B33A-A3ADC52FA05A} = {F477EC6A-151E-40E1-81B0-27C239387B9C}
 		{328EA520-12AB-495B-8E5D-D6AA18B39EA1} = {F477EC6A-151E-40E1-81B0-27C239387B9C}
+		{90F8AE1A-6852-4210-AF45-E27AF374DED3} = {F477EC6A-151E-40E1-81B0-27C239387B9C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {36203A89-55C5-4C3D-AE79-92B5D3E182A8}
