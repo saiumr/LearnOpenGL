@@ -33,7 +33,7 @@ vec2 ParalaxMapping_Steep(vec2 texCoords, vec3 viewDir) {
     float numLayers = mix(maxLayers, minLayers, max(dot(vec3(0.0, 0.0, 1.0), viewDir), 0.0));  // 根据视角倾斜程度动态设置层数
     float layerDepth = 1.0 / 10;
     float currentLayerDepth = 0.0;
-    vec2 p_offset = viewDir.xy * height_scale;
+    vec2 p_offset = viewDir.xy / viewDir.z * height_scale;
     vec2 deltaTexCoords = p_offset / numLayers;
 
     vec2 currentTexCoords = texCoords;
