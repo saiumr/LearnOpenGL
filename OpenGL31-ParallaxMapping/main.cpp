@@ -36,6 +36,9 @@ float delta_time { 0.0f };
 float last_frame { 0.0f };
 
 bool equip_light { false };
+bool space_pressed { false };
+bool enable_paralax_mapping	{ false };
+float height_scale { 0.05f };
 
 GLuint quadVAO = 0;
 GLuint quadVBO;
@@ -60,12 +63,14 @@ void RenderLoop() {
 	Vertex vertex;
 	unsigned int wall_texture{ LoadTexture("bricks2.jpg", true) };
 	unsigned int wall_normal_texture { LoadTexture("bricks2_normal.jpg", false) };
+	unsigned int wall_paralax_texture { LoadTexture("bricks2_disp.jpg", false) };
 	Shader shader { "normal_mapping.vert", "normal_mapping.frag" };
 	Shader light_shader { "light_cube.vert", "light_cube.frag" };
 
 	shader.use();
 	shader.setInt("diffuseMap", 0);
 	shader.setInt("normalMap", 1);
+	shader.setInt("depthMap", 2);
 
 	glm::vec3 light_pos { 0.0f, 0.0f, 3.0f };
 
@@ -95,10 +100,14 @@ void RenderLoop() {
 		shader.setVec3("viewPos", camera.Position);
 		shader.setVec3("lightPos", light_pos);
 		shader.setFloat("shininess", 64.0f);
+		shader.setBool("enable_paralax_mapping", enable_paralax_mapping);
+		shader.setFloat("height_scale", height_scale);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, wall_texture);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, wall_normal_texture);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, wall_paralax_texture);
 		RenderQuad();
 
 		light_shader.use();
@@ -210,6 +219,21 @@ void ProcessInput(GLFWwindow* window) {
 
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
 		equip_light = !equip_light;
+	}
+
+	if (!space_pressed && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		space_pressed = true;
+		enable_paralax_mapping = !enable_paralax_mapping;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
+		space_pressed = false;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		height_scale += 0.01f;
+	} else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		height_scale -= 0.01f;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
