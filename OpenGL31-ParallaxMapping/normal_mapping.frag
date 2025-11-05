@@ -20,9 +20,30 @@ uniform float shininess;
 
 vec2 ParalaxMapping_Basic(vec2 texCoords, vec3 viewDir) {
     float height = texture(depthMap, texCoords).r;
-    vec2  p_offset = viewDir.xy / viewDir.z * (height * height_scale);
+    vec2  p_offset = (viewDir.xy / viewDir.z) * (height * height_scale);
     
     return texCoords - p_offset;
+}
+
+// 当视角很倾斜（看到的高度差过大）会出现失真，利用陡峭视差映射解决
+// 将深度均匀分层，找到深度值小于层级深度的那一层（不被覆盖），取其纹理UV坐标
+vec2 ParalaxMapping_Steep(vec2 texCoords, vec3 viewDir) {
+    const float numLayers = 10;
+    float layerDepth = 1.0 / 10;
+    float currentLayerDepth = 0.0;
+    vec2 p_offset = viewDir.xy * height_scale;
+    vec2 deltaTexCoords = p_offset / numLayers;
+
+    vec2 currentTexCoords = texCoords;
+    float currentDepthMapValue = texture(depthMap, currentTexCoords).r;
+
+    while (currentDepthMapValue > currentLayerDepth) {
+        currentLayerDepth += layerDepth;
+        currentTexCoords -= deltaTexCoords;
+        currentDepthMapValue = texture(depthMap, currentTexCoords).r;
+    }
+
+    return currentTexCoords;
 }
 
 void main() {
@@ -31,7 +52,7 @@ void main() {
     vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
 
     if (enable_paralax_mapping) {
-        tex_coords = ParalaxMapping_Basic(tex_coords, viewDir);
+        tex_coords = ParalaxMapping_Steep(tex_coords, viewDir);
     }
 
     if(tex_coords.x > 1.0 || tex_coords.y > 1.0 || tex_coords.x < 0.0 || tex_coords.y < 0.0)
