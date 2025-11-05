@@ -34,6 +34,9 @@ void main() {
         tex_coords = ParalaxMapping_Basic(tex_coords, viewDir);
     }
 
+    if(tex_coords.x > 1.0 || tex_coords.y > 1.0 || tex_coords.x < 0.0 || tex_coords.y < 0.0)
+        discard;
+
 	vec3 color = texture(diffuseMap, tex_coords).rgb;
 	vec3 normal =  texture(normalMap, tex_coords).rgb;
     normal = normalize(normal * 2.0 - 1.0);
