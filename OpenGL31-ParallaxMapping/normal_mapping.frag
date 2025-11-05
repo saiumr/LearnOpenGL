@@ -18,6 +18,7 @@ uniform float height_scale;
 
 uniform float shininess;
 
+// 基本视差映射
 vec2 ParalaxMapping_Basic(vec2 texCoords, vec3 viewDir) {
     float height = texture(depthMap, texCoords).r;
     vec2  p_offset = (viewDir.xy / viewDir.z) * (height * height_scale);
@@ -48,13 +49,49 @@ vec2 ParalaxMapping_Steep(vec2 texCoords, vec3 viewDir) {
     return currentTexCoords;
 }
 
+// 陡峭视差映射可能会看到明显的分层，利用视差遮挡映射（或者比较吃性能的浮雕(relief)视差映射解决），扩展陡峭视差映射算法即可
+// 我们找到符合条件的那一层之后，取那层和上一层在视差题图中的深度进行插值，这样获得的结果更接近真实记录的深度
+// 同理，偏移后的纹理坐标也就是两个坐标插值
+vec2 ParalaxMapping_Occlusion(vec2 texCoords, vec3 viewDir) {
+    const float minLayers = 8.0;
+    const float maxLayers = 32.0;
+    float numLayers = mix(maxLayers, minLayers, max(dot(vec3(0.0, 0.0, 1.0), viewDir), 0.0));
+    float layerDepth = 1.0 / 10;
+    float currentLayerDepth = 0.0;
+    vec2 p_offset = viewDir.xy / viewDir.z * height_scale;
+    vec2 deltaTexCoords = p_offset / numLayers;
+
+    vec2 currentTexCoords = texCoords;
+    vec2 pre_currentTexCoords = currentTexCoords;
+    float currentDepthMapValue = texture(depthMap, currentTexCoords).r;
+
+    while (currentDepthMapValue > currentLayerDepth) {
+        currentLayerDepth += layerDepth;
+        currentTexCoords -= deltaTexCoords;
+        currentDepthMapValue = texture(depthMap, currentTexCoords).r;
+    }
+
+    // get texture coordinates before collision (reverse operations)
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+
+    // get depth after and before collision for linear interpolation
+    float afterDepth  = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = texture(depthMap, prevTexCoords).r - currentLayerDepth + layerDepth;
+ 
+    // interpolation of texture coordinates
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+
+    return finalTexCoords;
+}
+
 void main() {
 	float gamma = 2.2;
     vec2 tex_coords = fs_in.TexCoords;
     vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
 
     if (enable_paralax_mapping) {
-        tex_coords = ParalaxMapping_Steep(tex_coords, viewDir);
+        tex_coords = ParalaxMapping_Occlusion(tex_coords, viewDir);
     }
 
     if(tex_coords.x > 1.0 || tex_coords.y > 1.0 || tex_coords.x < 0.0 || tex_coords.y < 0.0)
