@@ -38,7 +38,7 @@ void main() {
     
     mat3 TBN = transpose(mat3(T, B, N));  // 正交矩阵的转置  <=>  矩阵的逆
     // 世界空间 -> 切线空间
-    vs_out.TangentLightPos = TBN * lightPos;
+    vs_out.TangentLightPos = TBN * lightPos;         // <=> T、B、N分别与lightPos点乘（dot）组合而成的向量；有些代码可能会直接点乘计算
     vs_out.TangentViewPos  = TBN * viewPos;
     vs_out.TangentFragPos  = TBN * vs_out.FragPos;
 }
