@@ -38,7 +38,7 @@ float last_frame { 0.0f };
 bool equip_light { false };
 bool space_pressed { false };
 bool enable_paralax_mapping	{ false };
-float height_scale { 0.05f };
+float height_scale { 0.1f };
 
 GLuint quadVAO = 0;
 GLuint quadVBO;
@@ -61,9 +61,9 @@ int main(int argc, const char** argv) {
 
 void RenderLoop() {
 	Vertex vertex;
-	unsigned int wall_texture{ LoadTexture("bricks2.jpg", true) };
-	unsigned int wall_normal_texture { LoadTexture("bricks2_normal.jpg", false) };
-	unsigned int wall_paralax_texture { LoadTexture("bricks2_disp.jpg", false) };
+	unsigned int wall_texture{ LoadTexture("wood.png", true) };
+	unsigned int wall_normal_texture { LoadTexture("toy_box_normal.png", false) };
+	unsigned int wall_paralax_texture { LoadTexture("toy_box_disp.png", false) };
 	Shader shader { "normal_mapping.vert", "normal_mapping.frag" };
 	Shader light_shader { "light_cube.vert", "light_cube.frag" };
 
@@ -231,9 +231,9 @@ void ProcessInput(GLFWwindow* window) {
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		height_scale += 0.01f;
+		height_scale += 0.001f;
 	} else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		height_scale -= 0.01f;
+		height_scale -= 0.001f;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
