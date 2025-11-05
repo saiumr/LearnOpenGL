@@ -86,7 +86,7 @@ void RenderLoop() {
 
 		glm::mat4 model { 1.0f };
 		glm::mat4 view	{ camera.GetViewMatrix() };
-		glm::mat4 projection { glm::perspective(glm::radians(45.0f), static_cast<float>(kScreenWidth)/ static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
+		glm::mat4 projection { glm::perspective(glm::radians(camera.Zoom), static_cast<float>(kScreenWidth)/ static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
 
 		shader.use();
 		model = glm::rotate(model, (GLfloat)glfwGetTime() * -10 * 0.02f, glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // Rotates the quad to show normal mapping works in all directions
