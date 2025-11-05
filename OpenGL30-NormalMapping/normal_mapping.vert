@@ -34,7 +34,7 @@ void main() {
     // re-orthogonalize T with respect to N
     T = normalize(T - dot(T, N) * N);
     // then retrieve perpendicular vector B with the cross product of T and N
-    vec3 B = cross(T, N);
+    vec3 B = cross(N, T);
     
     mat3 TBN = transpose(mat3(T, B, N));  // 正交矩阵的转置  <=>  矩阵的逆
     // 世界空间 -> 切线空间
