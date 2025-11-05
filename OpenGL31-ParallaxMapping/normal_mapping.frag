@@ -28,7 +28,9 @@ vec2 ParalaxMapping_Basic(vec2 texCoords, vec3 viewDir) {
 // 当视角很倾斜（看到的高度差过大）会出现失真，利用陡峭视差映射解决
 // 将深度均匀分层，找到深度值小于层级深度的那一层（不被覆盖），取其纹理UV坐标
 vec2 ParalaxMapping_Steep(vec2 texCoords, vec3 viewDir) {
-    const float numLayers = 10;
+    const float minLayers = 8.0;
+    const float maxLayers = 32.0;
+    float numLayers = mix(maxLayers, minLayers, max(dot(vec3(0.0, 0.0, 1.0), viewDir), 0.0));  // 根据视角倾斜程度动态设置层数
     float layerDepth = 1.0 / 10;
     float currentLayerDepth = 0.0;
     vec2 p_offset = viewDir.xy * height_scale;
