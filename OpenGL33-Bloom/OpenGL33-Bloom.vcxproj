@@ -137,6 +137,8 @@
     <None Include="bloom_final.vert" />
     <None Include="bloom.frag" />
     <None Include="bloom.vert" />
+    <None Include="blur.frag" />
+    <None Include="blur.vert" />
     <None Include="light_box.frag" />
   </ItemGroup>
   <ItemGroup>

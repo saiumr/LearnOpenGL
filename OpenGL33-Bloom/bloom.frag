@@ -1,5 +1,6 @@
 #version 330 core
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;    // attachment 0
+layout (location = 1) out vec4 BrightColor;  // attachment 1
 
 in VS_OUT {
     vec3 FragPos;
@@ -29,13 +30,20 @@ void main() {
         // diffuse
         vec3 lightDir = normalize(lights[i].Position - fs_in.FragPos);
         float diff = max(dot(lightDir, normal), 0.0);
-        vec3 diffuse = lights[i].Color * diff * color;      
-        vec3 result = diffuse;        
+        vec3 result = lights[i].Color * diff * color;      // just difuse      
         // attenuation (use quadratic as we have gamma correction)
         float distance = length(fs_in.FragPos - lights[i].Position);
         result *= 1.0 / (distance * distance);
         lighting += result;
                 
     }
-    FragColor = vec4(ambient + lighting, 1.0);
+    vec3 result = ambient + lighting;
+    // 根据人眼对不同通道感光敏感度计算亮度：r    g       b
+    float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722));
+    if(brightness > 1.0) {  // 用hdr的原因在于可以存储高于1的亮度
+        BrightColor = vec4(result, 1.0);
+    } else {
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+    FragColor = vec4(result, 1.0);
 }
