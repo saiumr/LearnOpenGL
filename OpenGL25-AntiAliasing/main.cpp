@@ -63,6 +63,7 @@ void RenderLoop() {
 	unsigned int textureColorBufferMultiSampled;
 	glGenTextures(1, &textureColorBufferMultiSampled);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled);
+	// 参数2：每个像素的采样点数量
 	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, kScreenWidth, kScreenHeight, GL_TRUE);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled, 0);
@@ -166,6 +167,10 @@ int InitWindow() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
+	// 设置多采样点抗锯齿，图形api自动抗锯齿，后面离屏渲染是手动抗锯齿
+	// 设置窗口内每个像素采样点，在创建窗口前使用
+	glfwWindowHint(GLFW_SAMPLES, 4);
+	
 	window = glfwCreateWindow(kScreenWidth, kScreenHeight, "Advanced: Anti aliasing", nullptr, nullptr);
 	if (!window) {
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -182,6 +187,15 @@ int InitWindow() {
 	glEnable(GL_DEPTH_TEST);
 	// enable following line to allow us to modify point size by set gl_PointSize in vertex shader
 	//glEnable(GL_PROGRAM_POINT_SIZE);
+
+	// 查询默认帧缓冲的采样点数量
+	int samples;
+	glGetIntegerv(GL_SAMPLES, &samples);
+	std::cout << "默认帧缓冲采样点数量: " << samples << std::endl;
+
+	// 查询多重采样是否启用（GL_MULTISAMPLE的启用状态）
+	bool multisampleEnabled = glIsEnabled(GL_MULTISAMPLE);
+	std::cout << "GL_MULTISAMPLE是否启用: " << (multisampleEnabled ? "是" : "否") << std::endl;
 
 	// glEnable(GL_MULTISAMPLE); // enabled by default on some drivers, but not all so always enable to make sure
 
