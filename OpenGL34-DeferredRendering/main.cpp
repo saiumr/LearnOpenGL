@@ -56,6 +56,7 @@ void RenderLoop() {
 	Vertex vertex;
 	Shader shader_geometry_pass { "g_buffer.vert", "g_buffer.frag" };
 	Shader shader_lighting_pass { "deferred_shading.vert", "deferred_shading.frag" };
+	Shader shader_light_box { "deferred_light_box.vert", "deferred_light_box.frag" };
 
 	shader_lighting_pass.use();
 	shader_lighting_pass.setInt("gPosition", 0);
@@ -73,6 +74,24 @@ void RenderLoop() {
 	object_positions.emplace_back(glm::vec3{ -3.0,  -0.5,  3.0 });
 	object_positions.emplace_back(glm::vec3{  0.0,  -0.5,  3.0 });
 	object_positions.emplace_back(glm::vec3{  3.0,  -0.5,  3.0 });
+
+	const unsigned int NR_LIGHTS = 32;
+	std::vector<glm::vec3> lightPositions;
+	std::vector<glm::vec3> lightColors;
+	srand(13);
+	for (unsigned int i = 0; i < NR_LIGHTS; i++)
+	{
+		// calculate slightly random offsets
+		float xPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
+		float yPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 4.0);
+		float zPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
+		lightPositions.push_back(glm::vec3(xPos, yPos, zPos));
+		// also calculate random color
+		float rColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+		float gColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+		float bColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+		lightColors.push_back(glm::vec3(rColor, gColor, bColor));
+	}
 
 	// create g-buffer and config
 	unsigned int gBuffer;                           // frame buffer
@@ -159,8 +178,41 @@ void RenderLoop() {
 		glBindTexture(GL_TEXTURE_2D, gNormal);
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+		for (unsigned int i = 0; i < lightPositions.size(); i++)
+		{
+			shader_lighting_pass.setVec3("lights[" + std::to_string(i) + "].Position", lightPositions[i]);
+			shader_lighting_pass.setVec3("lights[" + std::to_string(i) + "].Color", lightColors[i]);
+			// update attenuation parameters and calculate radius
+			const float linear = 0.7f;
+			const float quadratic = 1.8f;
+			shader_lighting_pass.setFloat("lights[" + std::to_string(i) + "].Linear", linear);
+			shader_lighting_pass.setFloat("lights[" + std::to_string(i) + "].Quadratic", quadratic);
+		}
+		shader_lighting_pass.setVec3("viewPos", camera.Position);
 		glBindVertexArray(vertex.quadVAO);
 		vertex.Draw(vertex.quadVAO);
+
+		// scene in quadVAO
+		// now we copy depth info to default framebuffer's depth buffer
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+		glBlitFramebuffer(0, 0, kScreenWidth, kScreenHeight, 0, 0, kScreenWidth, kScreenHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// finally render light boxes
+		shader_light_box.use();
+		shader_light_box.setMat4("view", view);
+		shader_light_box.setMat4("projection", projection);
+		glBindVertexArray(vertex.cubeVAO);
+		for (unsigned int i = 0; i < lightPositions.size(); i++) {
+			model = glm::mat4{ 1.0f };
+			model = glm::translate(model, lightPositions[i]);
+			model = glm::scale(model, glm::vec3(0.1f));
+			shader_light_box.setMat4("model", model);
+			shader_light_box.setVec3("lightColor", lightColors[i]);
+			
+			vertex.Draw(vertex.cubeVAO);
+		}
 
 		glBindVertexArray(0);
 
@@ -169,6 +221,8 @@ void RenderLoop() {
 	}
 
 	shader_geometry_pass.Clean();
+	shader_lighting_pass.Clean();
+	shader_light_box.Clean();
 }
 
 

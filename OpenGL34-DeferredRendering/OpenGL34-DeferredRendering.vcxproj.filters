@@ -20,6 +20,8 @@
     <None Include="g_buffer.frag" />
     <None Include="deferred_shading.vert" />
     <None Include="deferred_shading.frag" />
+    <None Include="deferred_light_box.vert" />
+    <None Include="deferred_light_box.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">
