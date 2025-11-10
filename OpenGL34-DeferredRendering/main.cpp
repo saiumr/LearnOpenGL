@@ -21,6 +21,7 @@ void ProcessInput(GLFWwindow* window);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+float CalcLightBallRedius(const glm::vec3& light_color, float linear, float quadratic);
 
 GLFWwindow* window{ nullptr };
 const int kScreenWidth{ 800 };
@@ -183,14 +184,11 @@ void RenderLoop() {
 			shader_lighting_pass.setVec3("lights[" + std::to_string(i) + "].Position", lightPositions[i]);
 			shader_lighting_pass.setVec3("lights[" + std::to_string(i) + "].Color", lightColors[i]);
 			// update attenuation parameters and calculate radius
-			const float constant = 1.0f; // note that we don't send this to the shader, we assume it is always 1.0 (in our case)
 			const float linear = 0.7f;
 			const float quadratic = 1.8f;
 			shader_lighting_pass.setFloat("lights[" + std::to_string(i) + "].Linear", linear);
 			shader_lighting_pass.setFloat("lights[" + std::to_string(i) + "].Quadratic", quadratic);
-			// then calculate radius of light volume/sphere
-			const float maxBrightness = std::fmaxf(std::fmaxf(lightColors[i].r, lightColors[i].g), lightColors[i].b);
-			float radius = (-linear + std::sqrt(linear * linear - 4 * quadratic * (constant - (256.0f / 5.0f) * maxBrightness))) / (2.0f * quadratic);
+			float radius = CalcLightBallRedius(lightColors[i], linear, quadratic);
 			shader_lighting_pass.setFloat("lights[" + std::to_string(i) + "].Radius", radius);
 		}
 		shader_lighting_pass.setVec3("viewPos", camera.Position);
@@ -410,4 +408,12 @@ void MouseCallback(GLFWwindow* window, double xposIn, double yposIn)
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	camera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+float CalcLightBallRedius(const glm::vec3& light_color, float linear, float quadratic) {
+	const float constant = 1.0f; // note that we don't send this to the shader, we assume it is always 1.0 (in our case)
+	// then calculate radius of light volume/sphere
+	const float maxBrightness = std::fmaxf(std::fmaxf(light_color.r, light_color.g), light_color.b);
+	float radius = (-linear + std::sqrt(linear * linear - 4 * quadratic * (constant - (256.0f / 5.0f) * maxBrightness))) / (2.0f * quadratic);
+	return radius;
 }
