@@ -1,65 +1,54 @@
 #version 330 core
 out vec4 FragColor;
 
-in vec2 TexCoords;
-
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 
-uniform int select_num;
-
+// 单个光源参数（不再是数组）
 struct Light {
     vec3 Position;
     vec3 Color;
-    
     float Linear;
     float Quadratic;
-    float Radius;
 };
-const int NR_LIGHTS = 32;
-uniform Light lights[NR_LIGHTS];
+uniform Light light;
+
 uniform vec3 viewPos;
 
 void main() {
-	vec3 FragPos = texture(gPosition, TexCoords).rgb;
-	vec3 Normal = texture(gNormal, TexCoords).rgb;
-	vec3 Diffuse = texture(gAlbedoSpec, TexCoords).rgb;
-	float Specular = texture(gAlbedoSpec, TexCoords).a;
+    vec2 texCoords = gl_FragCoord.xy / textureSize(gPosition, 0);
+    vec3 FragPos = texture(gPosition, texCoords).rgb;
+    vec3 Normal = texture(gNormal, texCoords).rgb;
+    vec3 Diffuse = texture(gAlbedoSpec, texCoords).rgb;
+    float Specular = texture(gAlbedoSpec, texCoords).a;
 
-	/*
-	vec3 result = Diffuse;
-	if ( select_num == 0 ) {
-		result = FragPos;
-	} else if ( select_num == 1 ) {
-		result = Normal;
-	} else if ( select_num == 2 ) {
-		result = Diffuse;
-	} else {
-		result = vec3(Specular);
-	}
-	*/
-
-    // then calculate lighting as usual
-    vec3 lighting  = Diffuse * 0.1; // hard-coded ambient component
-    vec3 viewDir  = normalize(viewPos - FragPos);
-    for(int i = 0; i < NR_LIGHTS; ++i) {
-        // calculate distance between light source and current fragment
-        float distance = length(lights[i].Position - FragPos);
-        if(distance < lights[i].Radius) {
-            // diffuse
-            vec3 lightDir = normalize(lights[i].Position - FragPos);
-            vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Diffuse * lights[i].Color;
-            // specular
-            vec3 halfwayDir = normalize(lightDir + viewDir);  
-            float spec = pow(max(dot(Normal, halfwayDir), 0.0), 16.0);
-            vec3 specular = lights[i].Color * spec * Specular;
-            // attenuation
-            float attenuation = 1.0 / (1.0 + lights[i].Linear * distance + lights[i].Quadratic * distance * distance);
-            diffuse *= attenuation;
-            specular *= attenuation;
-            lighting += diffuse + specular;
-        }
+    // 2. 跳过背景像素（没有物体的地方，不计算光照）
+    if (length(FragPos) < 0.1f) {
+        FragColor = vec4(0.0f);
+        return;
     }
-    FragColor = vec4(lighting, 1.0);
+
+    // 3. 计算光照（没有if判断！因为球体已经限制了像素范围）
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 lightDir = normalize(light.Position - FragPos);
+    
+    // 漫反射
+    float diff = max(dot(Normal, lightDir), 0.0f);
+    vec3 diffuse = diff * Diffuse * light.Color;
+    
+    // 高光（Blinn-Phong）
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(Normal, halfwayDir), 0.0f), 16.0f);
+    vec3 specular = spec * Specular * light.Color;
+    
+    // 衰减（和原来一样）
+    float distance = length(light.Position - FragPos);
+    float attenuation = 1.0f / (1.0f + light.Linear * distance + light.Quadratic * distance * distance);
+    
+    diffuse *= attenuation;
+    specular *= attenuation;
+    
+    // 输出当前光源的光照贡献（后续会通过混合累加）
+    FragColor = vec4(diffuse + specular, 1.0f);
 }

@@ -152,7 +152,7 @@ void RenderLoop() {
 		glm::mat4 model{ 1.0f };
 		glm::mat4 view{ camera.GetViewMatrix() };
 		glm::mat4 projection{ glm::perspective(glm::radians(camera.Zoom), static_cast<float>(kScreenWidth) / static_cast<float>(kScreenHeight), 0.1f, 100.0f) };
-
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 		glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -169,38 +169,55 @@ void RenderLoop() {
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		// lighting pass
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		// now we copy depth info to default framebuffer's depth buffer
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+		glBlitFramebuffer(0, 0, kScreenWidth, kScreenHeight, 0, 0, kScreenWidth, kScreenHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// lighting pass
+		// 启用加法混合（累加多个光源的光照贡献）
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE); // 混合模式：新光照颜色 + 已有颜色
+		glDepthMask(GL_FALSE);       // 禁用深度写入（避免球体覆盖G-Buffer的深度）
 		shader_lighting_pass.use();
 		shader_lighting_pass.setInt("select_num", select_num);
+		shader_lighting_pass.setVec3("viewPos", camera.Position);
+		shader_lighting_pass.setMat4("projection", projection);
+		shader_lighting_pass.setMat4("view", view);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, gPosition);	
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, gNormal);
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-		for (unsigned int i = 0; i < lightPositions.size(); i++)
-		{
-			shader_lighting_pass.setVec3("lights[" + std::to_string(i) + "].Position", lightPositions[i]);
-			shader_lighting_pass.setVec3("lights[" + std::to_string(i) + "].Color", lightColors[i]);
+		glBindVertexArray(vertex.ballVAO);
+		for (unsigned int i = 0; i < lightPositions.size(); i++) {
+			auto& light_pos { lightPositions[i] };
+			auto& light_color { lightColors[i] };
 			// update attenuation parameters and calculate radius
-			const float linear = 0.7f;
-			const float quadratic = 1.8f;
-			shader_lighting_pass.setFloat("lights[" + std::to_string(i) + "].Linear", linear);
-			shader_lighting_pass.setFloat("lights[" + std::to_string(i) + "].Quadratic", quadratic);
+			float linear = 0.7f;
+			float quadratic = 1.8f;
 			float radius = CalcLightBallRedius(lightColors[i], linear, quadratic);
-			shader_lighting_pass.setFloat("lights[" + std::to_string(i) + "].Radius", radius);
-		}
-		shader_lighting_pass.setVec3("viewPos", camera.Position);
-		glBindVertexArray(vertex.quadVAO);
-		vertex.Draw(vertex.quadVAO);
 
-		// scene in quadVAO
-		// now we copy depth info to default framebuffer's depth buffer
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
-		glBlitFramebuffer(0, 0, kScreenWidth, kScreenHeight, 0, 0, kScreenWidth, kScreenHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			shader_lighting_pass.setVec3("light.Position", light_pos);
+			shader_lighting_pass.setVec3("light.Color", light_color);
+			shader_lighting_pass.setFloat("light.Linear", linear);
+			shader_lighting_pass.setFloat("light.Quadratic", quadratic);
+
+			// calculate model
+			glm::mat4 model { 1.0f };
+			model = glm::translate(model, light_pos);
+			model = glm::scale(model, glm::vec3(radius));
+			shader_lighting_pass.setMat4("model", model);
+			
+			vertex.Draw(vertex.ballVAO);
+		}
+		// 恢复渲染状态
+		glDepthMask(GL_TRUE);
+		glDisable(GL_BLEND);
 
 		// finally render light boxes
 		shader_light_box.use();
@@ -216,6 +233,27 @@ void RenderLoop() {
 			
 			vertex.Draw(vertex.cubeVAO);
 		}
+		
+		// debug code
+		//shader_light_box.use();
+		//shader_light_box.setMat4("view", view);
+		//shader_light_box.setMat4("projection", projection);
+		//glBindVertexArray(vertex.ballVAO);
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//for (unsigned int i = 0; i < lightPositions.size(); i++) {
+		//	float linear = 0.7f;
+		//	float quadratic = 1.8f;
+		//	float radius = CalcLightBallRedius(lightColors[i], linear, quadratic);
+		//	model = glm::mat4{ 1.0f };
+		//	model = glm::translate(model, lightPositions[i]);
+		//	model = glm::scale(model, glm::vec3(radius));
+		//	shader_light_box.setMat4("model", model);
+		//	shader_light_box.setVec3("lightColor", lightColors[i]);
+		//	
+		//	vertex.Draw(vertex.ballVAO);
+		//}
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 
 		glBindVertexArray(0);
 

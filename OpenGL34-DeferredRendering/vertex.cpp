@@ -161,6 +161,9 @@ void Vertex::Clean() const {
     glDeleteVertexArrays(1, &quadVAO);
     glDeleteBuffers(1, &quadVBO);
     glDeleteBuffers(1, &quadEBO);
+	glDeleteVertexArrays(1, &ballVAO);
+	glDeleteBuffers(1, &ballVBO);
+	glDeleteBuffers(1, &ballEBO);
 }
 
 void Vertex::Init() {
@@ -183,6 +186,10 @@ void Vertex::Init() {
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
 	glGenBuffers(1, &quadEBO);
+	glGenVertexArrays(1, &ballVAO);
+	glGenBuffers(1, &ballVBO);
+	glGenBuffers(1, &ballEBO);
+	GenBallVertices();
 
     // cube VAO
 	// bind first VAO
@@ -266,10 +273,57 @@ void Vertex::Init() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quad_indices), quad_indices, GL_STATIC_DRAW);
 
+	// ball VAO
+	glBindVertexArray(ballVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, ballVBO);
+	glBufferData(GL_ARRAY_BUFFER, ball_vertices_.size() * sizeof(float), &ball_vertices_[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);  // position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (void*)0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ballEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, ball_indices_.size() * sizeof(unsigned int), &ball_indices_[0], GL_STATIC_DRAW);
+
 	// unbind VAO VBO EBO
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);  // EBO must unbind after VAO unbind
+}
+
+void Vertex::GenBallVertices(float radius, int slices, int stacks) {
+    // Latitude stratification (layer 0-16)
+    // Longitude slice         (slice 0-16)
+    for (int i = 0; i <= stacks; ++i) {
+        float lat { glm::pi<float>() * i / stacks };
+        float sin_lat { sin(lat) };
+        float cos_lat { cos(lat) };
+        for (int j = 0; j <= slices; ++j) {
+			float lon { 2 * glm::pi<float>() * j / slices };
+			float sin_lon { sin(lon) };
+            float cos_lon { cos(lon) };
+            float x { radius * sin_lat * cos_lon };
+            float y { radius * cos_lat };
+            float z { radius * sin_lat * sin_lon };
+            ball_vertices_.emplace_back(x);
+            ball_vertices_.emplace_back(y);
+			ball_vertices_.emplace_back(z);
+        }
+    }
+
+	// every layer has 17 vertices (including North Pole, index 0-16)
+    for (int i = 0; i < stacks; ++i) {
+        for (int j = 0; j < slices; ++j) {
+			int a = i * (slices + 1) + j;        // left top
+			int b = a + 1;                       // right top
+			int c = (i + 1) * (slices + 1) + j;  // left bottom
+			int d = c + 1;                       // right bottom
+            
+			ball_indices_.emplace_back(a);
+            ball_indices_.emplace_back(b);
+			ball_indices_.emplace_back(c);
+            ball_indices_.emplace_back(c);
+			ball_indices_.emplace_back(b);
+			ball_indices_.emplace_back(d);
+        }
+    }
 }
 
 void Vertex::Draw(VAOType VAO) {
@@ -286,5 +340,7 @@ void Vertex::Draw(VAOType VAO) {
 		glDrawElementsInstanced(GL_TRIANGLES, sizeof(rect_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0, 100);
     } else if (VAO == quadVAO) {
         glDrawElements(GL_TRIANGLES, sizeof(quad_indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+	} else if (VAO == ballVAO) {
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ball_indices_.size()), GL_UNSIGNED_INT, 0);
     }
 }

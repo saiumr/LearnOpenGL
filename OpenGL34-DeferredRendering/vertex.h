@@ -3,6 +3,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
+#include <vector>
 
 using VAOType = unsigned int;
 
@@ -30,7 +32,13 @@ public:
 	VAOType quadVAO;
 	unsigned int quadVBO;
 	unsigned int quadEBO;
+	VAOType ballVAO;
+	unsigned int ballVBO;
+	unsigned int ballEBO;
 
 private:
 	void Init();
+	void GenBallVertices(float radius = 1.0f, int slices = 16, int stacks = 16);
+	std::vector<float> ball_vertices_;
+	std::vector<unsigned int> ball_indices_;
 };
