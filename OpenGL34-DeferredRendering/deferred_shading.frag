@@ -23,12 +23,12 @@ void main() {
     vec3 Diffuse = texture(gAlbedoSpec, texCoords).rgb;
     float Specular = texture(gAlbedoSpec, texCoords).a;
 
-    // 2. 跳过背景像素（没有物体的地方，不计算光照）
+    // 2. 跳过背景像素（没有物体的地方，不计算光照） <- 这一步可以去除
     if (length(FragPos) < 0.1f) {
         FragColor = vec4(0.0f);
         return;
     }
-
+    
     // 3. 计算光照（没有if判断！因为球体已经限制了像素范围）
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 lightDir = normalize(light.Position - FragPos);

@@ -170,18 +170,14 @@ void RenderLoop() {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		// now we copy depth info to default framebuffer's depth buffer
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
-		glBlitFramebuffer(0, 0, kScreenWidth, kScreenHeight, 0, 0, kScreenWidth, kScreenHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// lighting pass
 		// 启用加法混合（累加多个光源的光照贡献）
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE); // 混合模式：新光照颜色 + 已有颜色
 		glDepthMask(GL_FALSE);       // 禁用深度写入（避免球体覆盖G-Buffer的深度）
+		glEnable(GL_CULL_FACE);      // 启用面剔除，防止摄像机在光球外时，视线穿过两次光球表面让一个光源叠加两次光照导致画面过曝
+		glCullFace(GL_FRONT);        // 剔除正面，让摄像机在光球内时仍绘制一次光球表面（保持内外叠加一次）
 		shader_lighting_pass.use();
 		shader_lighting_pass.setInt("select_num", select_num);
 		shader_lighting_pass.setVec3("viewPos", camera.Position);
@@ -218,6 +214,14 @@ void RenderLoop() {
 		// 恢复渲染状态
 		glDepthMask(GL_TRUE);
 		glDisable(GL_BLEND);
+		glCullFace(GL_BACK);
+		glDisable(GL_CULL_FACE);
+
+		// now we copy depth info to default framebuffer's depth buffer
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+		glBlitFramebuffer(0, 0, kScreenWidth, kScreenHeight, 0, 0, kScreenWidth, kScreenHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// finally render light boxes
 		shader_light_box.use();
