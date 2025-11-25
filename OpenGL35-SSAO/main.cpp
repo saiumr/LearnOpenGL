@@ -61,6 +61,7 @@ void RenderLoop() {
 	Shader shader_geometry_pass { "ssao_geometry.vert", "ssao_geometry.frag" };
 	Shader shader_lighting_pass { "ssao.vert", "ssao_lighting.frag" };
 	Shader shader_ssao { "ssao.vert", "ssao.frag" };
+	Shader shader_ssao_blur { "ssao.vert", "ssao_blur.frag" };
 	Shader shader_light_box { "light_box.vert", "light_box.frag" };
 
 	// Samplers
@@ -73,13 +74,15 @@ void RenderLoop() {
 	shader_ssao.setInt("gPositionDepth", 0);
 	shader_ssao.setInt("gNormal", 1);
 	shader_ssao.setInt("texNoise", 2);
+	shader_ssao_blur.use();
+	shader_ssao_blur.setInt("ssaoInput", 0);
 
 	// Objects
 	Model object_model { "nanosuit_reflection/nanosuit.obj" };
 
 	// Lights positions and colors
 	glm::vec3 light_pos = glm::vec3(2.0, 4.0, -2.0);
-	glm::vec3 light_color = glm::vec3(1.0f, 0.65f, 0.21f);
+	glm::vec3 light_color = glm::vec3(0.54f, 0.82f, 0.98f);
 
 	// create g-buffer and config
 	unsigned int gBuffer;                           // frame buffer
@@ -124,7 +127,7 @@ void RenderLoop() {
 
 	// check completeness
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		std::cout << "Framebuffer 1 not complete!" << std::endl;
+		std::cout << "Framebuffer 1: gBuffer is not complete!" << std::endl;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -140,8 +143,24 @@ void RenderLoop() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		std::cout << "Framebuffer 2 not complete!" << std::endl;
+		std::cout << "Framebuffer 2: SSAO buffer is not complete!" << std::endl;
 	}
+
+	// create framebuffer for SSAO blur pass
+	unsigned int ssaoBlurFBO;
+	glGenFramebuffers(1, &ssaoBlurFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
+	unsigned int ssaoColorBufferBlur;
+	glGenTextures(1, &ssaoColorBufferBlur);
+	glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, kScreenWidth, kScreenHeight, 0, GL_RED, GL_FLOAT, nullptr);  // we only need a single color value for SSAO
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBufferBlur, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "Framebuffer 3: Blur buffer is not complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// SSAO sample kernel
 	std::uniform_real_distribution<float> random_floats{ 0.0f, 1.0f }; // random floats between 0.0 - 1.0
@@ -235,7 +254,7 @@ void RenderLoop() {
 		
 		// SSAO pass
 		glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 		shader_ssao.use();
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, gPositionDepth);
@@ -247,6 +266,16 @@ void RenderLoop() {
 		for (unsigned int i = 0; i < 64; ++i) {
 			shader_ssao.setVec3("samples[" + std::to_string(i) + "]", ssao_kernel[i]);
 		}
+		glBindVertexArray(vertex.quadVAO);
+		vertex.Draw(vertex.quadVAO);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// blur pass
+		glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
+		glClear(GL_COLOR_BUFFER_BIT);
+		shader_ssao_blur.use();
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
 		glBindVertexArray(vertex.quadVAO);
 		vertex.Draw(vertex.quadVAO);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

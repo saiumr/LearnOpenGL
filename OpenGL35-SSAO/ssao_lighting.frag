@@ -29,7 +29,7 @@ void main() {
     vec3 lightDir = normalize(light.Position - FragPos);  // 这里的postion应该是摄像机空间的坐标，FragPos是摄像机空间坐标
     
     // ambient
-    vec3 ambient = vec3(0.3);
+    vec3 ambient = vec3(0.5);
     if (ssao_enabled) {
         ambient *= AmbientOcclusion;
     }

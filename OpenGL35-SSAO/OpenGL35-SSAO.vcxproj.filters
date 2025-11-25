@@ -23,6 +23,7 @@
     <None Include="light_box.frag" />
     <None Include="light_box.vert" />
     <None Include="ssao.frag" />
+    <None Include="ssao_blur.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">
