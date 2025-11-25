@@ -2,9 +2,12 @@
 out vec4 FragColor;
 in vec2 TexCoords;
 
-uniform sampler2D gPosition;
+uniform sampler2D gPositionDepth;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
+uniform sampler2D ssao;
+uniform bool ssao_enabled;
+
 
 // 单个光源参数
 struct Light {
@@ -16,16 +19,20 @@ struct Light {
 uniform Light light;
 
 void main() {
-    vec3 FragPos = texture(gPosition, TexCoords).rgb;
+    vec3 FragPos = texture(gPositionDepth, TexCoords).rgb;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
     vec3 Diffuse = texture(gAlbedoSpec, TexCoords).rgb;
     float Specular = texture(gAlbedoSpec, TexCoords).a;
+    float AmbientOcclusion = texture(ssao, TexCoords).r;
     
     vec3 viewDir = normalize(-FragPos);  // viewPos is (0,0,0)
     vec3 lightDir = normalize(light.Position - FragPos);  // 这里的postion应该是摄像机空间的坐标，FragPos是摄像机空间坐标
     
     // ambient
     vec3 ambient = vec3(0.3);
+    if (ssao_enabled) {
+        ambient *= AmbientOcclusion;
+    }
     vec3 lighting = ambient;
 
     // diffuse

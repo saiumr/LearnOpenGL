@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <random>
 #include "vertex.h"
 #include "shader.h"
 #include "camera.h"
@@ -22,6 +23,7 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 float CalcLightBallRedius(const glm::vec3& light_color, float linear, float quadratic);
+float lerp(GLfloat a, GLfloat b, GLfloat f);
 
 GLFWwindow* window{ nullptr };
 const int kScreenWidth{ 800 };
@@ -36,6 +38,8 @@ float last_frame{ 0.0f };
 
 bool equip_light { false };
 bool is_e_pressed{ false };
+bool ssao_enabled{ false };
+bool is_space_pressed{ false };
 
 int main(int argc, const char** argv) {
 	if (InitWindow() < 0) {
@@ -56,36 +60,42 @@ void RenderLoop() {
 	Vertex vertex;
 	Shader shader_geometry_pass { "ssao_geometry.vert", "ssao_geometry.frag" };
 	Shader shader_lighting_pass { "ssao.vert", "ssao_lighting.frag" };
+	Shader shader_ssao { "ssao.vert", "ssao.frag" };
 	Shader shader_light_box { "light_box.vert", "light_box.frag" };
 
 	// Samplers
 	shader_lighting_pass.use();
-	shader_lighting_pass.setInt("gPosition", 0);
+	shader_lighting_pass.setInt("gPositionDepth", 0);
 	shader_lighting_pass.setInt("gNormal", 1);
 	shader_lighting_pass.setInt("gAlbedoSpec", 2);
+	shader_lighting_pass.setInt("ssao", 3);
+	shader_ssao.use();
+	shader_ssao.setInt("gPositionDepth", 0);
+	shader_ssao.setInt("gNormal", 1);
+	shader_ssao.setInt("texNoise", 2);
 
 	// Objects
 	Model object_model { "nanosuit_reflection/nanosuit.obj" };
 
 	// Lights positions and colors
 	glm::vec3 light_pos = glm::vec3(2.0, 4.0, -2.0);
-	glm::vec3 light_color = glm::vec3(0.2, 0.4, 0.3);
+	glm::vec3 light_color = glm::vec3(1.0f, 0.65f, 0.21f);
 
 	// create g-buffer and config
 	unsigned int gBuffer;                           // frame buffer
 	glGenFramebuffers(1, &gBuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-	unsigned int  gPosition, gNormal, gAlbedoSpec;  // color attachments
+	unsigned int  gPositionDepth, gNormal, gAlbedoSpec;  // color attachments
 	// 位置和法线需要更多精度
 	// config position color attachment
-	glGenTextures(1, &gPosition);
-	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glGenTextures(1, &gPositionDepth);
+	glBindTexture(GL_TEXTURE_2D, gPositionDepth);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, kScreenWidth, kScreenHeight, 0, GL_RGBA, GL_FLOAT, nullptr);  // 使用GL_RGBA16F 可以存储默认范围 0.0 - 1.0 之外的浮点值
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPositionDepth, 0);
 	// config normal color attachment
 	glGenTextures(1, &gNormal);
 	glBindTexture(GL_TEXTURE_2D, gNormal);
@@ -117,6 +127,69 @@ void RenderLoop() {
 		std::cout << "Framebuffer 1 not complete!" << std::endl;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// create framebuffer for SSAO pass
+	unsigned int ssaoFBO;
+	glGenFramebuffers(1, &ssaoFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+	unsigned int ssaoColorBuffer;
+	glGenTextures(1, &ssaoColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, kScreenWidth, kScreenHeight, 0, GL_RED, GL_FLOAT, nullptr);  // we only need a single color value for SSAO
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "Framebuffer 2 not complete!" << std::endl;
+	}
+
+	// SSAO sample kernel
+	std::uniform_real_distribution<float> random_floats{ 0.0f, 1.0f }; // random floats between 0.0 - 1.0
+	std::default_random_engine generator;
+	std::vector<glm::vec3> ssao_kernel;
+	ssao_kernel.reserve(64);
+	for (int i = 0; i < 64; ++i) {
+		// random distributed samplers in x[-1,1] y[-1,1] z[0,1] then nomalized, so we can get an half unit ball
+		// and assume it is in tangent space (xy is UV)
+		glm::vec3 sample{
+			random_floats(generator) * 2.0f - 1.0f,
+			random_floats(generator) * 2.0f - 1.0f,
+			random_floats(generator)
+		};
+		sample = glm::normalize(sample);  // 单位化到球面上
+
+		// 这里再随机缩放，是为了在球体内均匀分布，而不是在球面上均匀分布
+		sample *= random_floats(generator);
+
+		// 加速插值使采样点在中心更密集，边缘稀疏（二次函数是曲线x:[1/64, 63/64], y:[0.1, 1.0-]）
+		// Scale samples s.t. they're more aligned to center of kernel
+		float scale { static_cast<float>(i) / 64.0f };
+		scale = lerp(0.1f, 1.0f, scale * scale);
+		sample *= scale;
+		ssao_kernel.emplace_back(sample);
+	}
+
+	// ssao noise texture
+	std::vector<glm::vec3> ssaoNoise;
+	ssaoNoise.reserve(16);
+	for (int i = 0; i < 16; ++i) {
+		// rotation around z-axis only
+		// 实际上并不是旋转，而是在xy平面上的随机偏移，这样在切线空间就实现了随机旋转一定角度的效果
+		glm::vec3 noise{
+			random_floats(generator) * 2.0f - 1.0f,
+			random_floats(generator) * 2.0f - 1.0f,
+			0.0f
+		};
+		ssaoNoise.emplace_back(noise);
+	}
+	unsigned int noiseTexture;
+	glGenTextures(1, &noiseTexture);
+	glBindTexture(GL_TEXTURE_2D, noiseTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 4, 4, 0, GL_RED, GL_FLOAT, &ssaoNoise[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	while (!glfwWindowShouldClose(window)) {
 		float current_frame = static_cast<float>(glfwGetTime());
@@ -159,16 +232,36 @@ void RenderLoop() {
 		object_model.Draw(shader_geometry_pass);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+		// SSAO pass
+		glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		shader_ssao.use();
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, gPositionDepth);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, gNormal);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, noiseTexture);
+		shader_ssao.setMat4("projection", projection);
+		for (unsigned int i = 0; i < 64; ++i) {
+			shader_ssao.setVec3("samples[" + std::to_string(i) + "]", ssao_kernel[i]);
+		}
+		glBindVertexArray(vertex.quadVAO);
+		vertex.Draw(vertex.quadVAO);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// lighting pass
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shader_lighting_pass.use();
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, gPosition);	
+		glBindTexture(GL_TEXTURE_2D, gPositionDepth);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, gNormal);
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
 		float linear = 0.09f;
 		float quadratic = 0.032f;
 		view = camera.GetViewMatrix();
@@ -177,6 +270,7 @@ void RenderLoop() {
 		shader_lighting_pass.setVec3("light.Color", light_color);
 		shader_lighting_pass.setFloat("light.Linear", linear);
 		shader_lighting_pass.setFloat("light.Quadratic", quadratic);
+		shader_lighting_pass.setBool("ssao_enabled", ssao_enabled);
 
 		glBindVertexArray(vertex.quadVAO);
 		vertex.Draw(vertex.quadVAO);
@@ -308,6 +402,15 @@ void ProcessInput(GLFWwindow* window) {
 		is_e_pressed = false;
 	}
 
+	if (!is_space_pressed && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		ssao_enabled = !ssao_enabled;
+		is_space_pressed = true;
+	}
+
+	if (is_space_pressed && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
+		is_space_pressed = false;
+	}
+
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
 		camera.ProcessKeyboard(kUpward, delta_time);
 	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
@@ -358,4 +461,8 @@ float CalcLightBallRedius(const glm::vec3& light_color, float linear, float quad
 	const float maxBrightness = std::fmaxf(std::fmaxf(light_color.r, light_color.g), light_color.b);
 	float radius = (-linear + std::sqrt(linear * linear - 4 * quadratic * (constant - (256.0f / 5.0f) * maxBrightness))) / (2.0f * quadratic);
 	return radius;
+}
+
+float lerp(GLfloat a, GLfloat b, GLfloat f) {
+	return a + f * (b - a);
 }

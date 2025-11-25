@@ -131,6 +131,7 @@
     <None Include="assimp-vc143-mt.dll" />
     <None Include="light_box.frag" />
     <None Include="light_box.vert" />
+    <None Include="ssao.frag" />
     <None Include="ssao_lighting.frag" />
     <None Include="ssao.vert" />
     <None Include="ssao_geometry.frag" />
